@@ -1,5 +1,7 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { MapPin } from "lucide-react";
+import { ArrowUpRight, MapPin } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
@@ -8,6 +10,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type PublishedSpa = {
   id: string;
+  slug: string;
   name: string;
   city: string;
   state: string | null;
@@ -25,7 +28,7 @@ export default async function SpasPage() {
   const queryPublishedSpas = (orderBy: "created_at" | "id") =>
     supabase
       .from("spas")
-      .select("id, name, city, state, summary")
+      .select("id, slug, name, city, state, summary")
       .eq("status", "published")
       .order(orderBy, { ascending: false });
 
@@ -82,6 +85,15 @@ export default async function SpasPage() {
                 <p className="text-sm leading-6 text-muted-foreground">
                   {spa.summary || "No summary available yet."}
                 </p>
+                <div className="pt-2">
+                  <Link
+                    href={`/spas/${spa.slug}` as Route}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    View details
+                    <ArrowUpRight className="size-4" />
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ))}
