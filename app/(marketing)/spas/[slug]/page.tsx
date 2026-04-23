@@ -49,7 +49,7 @@ async function getPublishedSpaBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("spas")
-    .select("slug, name, city, state, summary, description")
+    .select("slug, name, city, state")
     .eq("status", "published")
     .eq("slug", slug)
     .maybeSingle();
@@ -65,6 +65,8 @@ async function getPublishedSpaBySlug(slug: string) {
   }
 
   const optionalFields = [
+    "summary",
+    "description",
     "address_line_1",
     "address_line_2",
     "postal_code",
@@ -109,8 +111,8 @@ async function getPublishedSpaBySlug(slug: string) {
     name: spa.name ?? "Untitled spa",
     city: spa.city ?? null,
     state: spa.state ?? null,
-    summary: spa.summary ?? null,
-    description: spa.description ?? null,
+    summary: optionalData.summary ?? null,
+    description: optionalData.description ?? null,
     address_line_1: optionalData.address_line_1 ?? null,
     address_line_2: optionalData.address_line_2 ?? null,
     postal_code: optionalData.postal_code ?? null,
