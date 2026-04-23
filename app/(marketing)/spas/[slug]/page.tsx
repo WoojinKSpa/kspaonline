@@ -4,25 +4,51 @@ import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import {
   ArrowUpRight,
+  CheckCircle2,
   ChevronLeft,
   Clock3,
-  CreditCard,
   Globe,
-  Info,
-  LayoutGrid,
   Mail,
   MapPin,
   Phone,
-  Receipt,
   ScrollText,
   Share2,
   Star,
+  XCircle,
 } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const AMENITY_OPTIONS = [
+  "24 hours",
+  "Accepts Credit Cards",
+  "Childcare",
+  "Cold Plunge",
+  "Cold Room",
+  "Elevator",
+  "Gendered Separated",
+  "Group Area",
+  "Hot Tub",
+  "Jade Room",
+  "Korean Scrubs",
+  "Locker Room",
+  "Massage Service",
+  "Offers Free Water",
+  "Outdoor Seating",
+  "Reservations",
+  "Restaurant",
+  "Sauna",
+  "Sleeping Space",
+  "Smoking Area",
+  "Spa Treatments",
+  "Steam Room",
+  "Valet Parking",
+  "Wheelchair Accessible",
+  "Wireless Internet",
+] as const;
 
 type SpaDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -186,28 +212,6 @@ function joinParts(parts: Array<string | null | undefined>) {
   return parts.filter(Boolean).join(", ");
 }
 
-function InfoBlock({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof MapPin;
-  label: string;
-  value?: string | null;
-}) {
-  if (!value) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-3xl bg-secondary p-5">
-      <Icon className="size-5 text-primary" />
-      <p className="mt-4 text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 whitespace-pre-line font-medium">{value}</p>
-    </div>
-  );
-}
-
 function SectionCard({
   title,
   body,
@@ -228,40 +232,6 @@ function SectionCard({
         <p className="whitespace-pre-line text-sm leading-7 text-muted-foreground">
           {body}
         </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ListCard({
-  title,
-  icon: Icon,
-  items,
-}: {
-  title: string;
-  icon: typeof MapPin;
-  items: string[];
-}) {
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Icon className="size-5 text-primary" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {items.map((item) => (
-            <Badge key={item} variant="outline">
-              {item}
-            </Badge>
-          ))}
-        </div>
       </CardContent>
     </Card>
   );
@@ -309,6 +279,7 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         ? `Day pass available · ${spa.day_pass_price}`
         : "Day pass available"
       : null);
+  const pricingLabel = spa.day_pass_offered ? "Day Pass" : "Pricing";
   const socialLinks = [
     { label: "Facebook", href: spa.facebook_url },
     { label: "Instagram", href: spa.instagram_url },
@@ -316,6 +287,8 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
     { label: "Twitter / X", href: spa.twitter_url },
     { label: "YouTube", href: spa.youtube_url },
   ].filter((item): item is { label: string; href: string } => Boolean(item.href));
+  const enabledAmenities = new Set(spa.amenities);
+  const primaryCategory = spa.listing_categories[0] ?? null;
 
   return (
     <Container className="py-16">
@@ -327,52 +300,112 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         Back to spas
       </Link>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="surface overflow-hidden p-8">
-          <div className="flex flex-wrap items-center gap-3">
-            {location ? (
-              <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                {location}
-              </Badge>
-            ) : null}
-            <Badge variant="secondary">Published</Badge>
-          </div>
+      <div className="mt-8 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+        <div className="grid gap-4">
+          <Card>
+            <CardContent className="grid gap-4 p-6 md:grid-cols-[1.25fr_0.75fr] md:items-start">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
+                  {primaryCategory ? (
+                    <Badge className="bg-primary text-primary-foreground hover:bg-primary">
+                      {primaryCategory}
+                    </Badge>
+                  ) : null}
+                </div>
+                {fullAddress ? (
+                  <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
+                ) : location ? (
+                  <p className="mt-3 text-base text-muted-foreground">{location}</p>
+                ) : null}
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  {website ? (
+                    <a
+                      href={website}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Globe className="size-4" />
+                      Website
+                    </a>
+                  ) : null}
+                  {email ? (
+                    <a
+                      href={`mailto:${email}`}
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Mail className="size-4" />
+                      Email
+                    </a>
+                  ) : null}
+                  {phone ? (
+                    <a
+                      href={`tel:${phone}`}
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Phone className="size-4" />
+                      Phone
+                    </a>
+                  ) : null}
+                </div>
+                {spa.summary ? (
+                  <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                    {spa.summary}
+                  </p>
+                ) : null}
+              </div>
 
-          <h1 className="mt-4 text-4xl font-semibold">{spa.name}</h1>
+              <div className="grid gap-4">
+                <Card className="rounded-[24px] shadow-none">
+                  <CardHeader className="pb-3">
+                    <CardTitle>Pricing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 text-sm">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-muted-foreground">{pricingLabel}</span>
+                      <span className="font-medium">{spa.day_pass_price || pricing || "N/A"}</span>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {spa.summary ? (
-            <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
-              {spa.summary}
-            </p>
-          ) : null}
+                <Card className="rounded-[24px] shadow-none">
+                  <CardHeader className="pb-3">
+                    <CardTitle>Amenities</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-x-6 gap-y-2 pt-0 text-sm sm:grid-cols-2">
+                    {AMENITY_OPTIONS.map((amenity) => {
+                      const enabled = enabledAmenities.has(amenity);
+                      return (
+                        <div
+                          key={amenity}
+                          className="inline-flex items-center gap-2 text-muted-foreground"
+                        >
+                          {enabled ? (
+                            <CheckCircle2 className="size-4 text-green-600" />
+                          ) : (
+                            <XCircle className="size-4 text-foreground" />
+                          )}
+                          <span>{amenity}</span>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <InfoBlock icon={MapPin} label="Location" value={fullAddress || location} />
-            <InfoBlock icon={Clock3} label="Hours" value={spa.hours_text} />
-            <InfoBlock icon={Receipt} label="Pricing" value={pricing} />
-          </div>
-
-          <div className="mt-10 grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             {spa.description ? (
-              <div className="rounded-[28px] border border-border bg-white p-6 xl:col-span-2">
-                <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-                  About this spa
-                </p>
-                <p className="mt-4 whitespace-pre-line text-base leading-8 text-muted-foreground">
-                  {spa.description}
-                </p>
+              <div className="lg:col-span-2">
+                <SectionCard title="About this spa" body={spa.description} />
               </div>
             ) : null}
             <SectionCard title="What to know" body={spa.what_to_know} />
             <SectionCard title="Important notes" body={spa.important_notes} />
-            <ListCard
-              title="Listing categories"
-              icon={LayoutGrid}
-              items={spa.listing_categories}
-            />
-            <ListCard title="Amenities" icon={Info} items={spa.amenities} />
           </div>
-        </section>
+        </div>
 
         <aside className="flex flex-col gap-4">
           <Card>
@@ -380,57 +413,42 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
               <CardTitle>Directory details</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4 text-sm">
-              {fullAddress ? (
-                <div>
-                  <p className="text-muted-foreground">Address</p>
-                  <p className="mt-1 font-medium">{fullAddress}</p>
+              {location ? (
+                <div className="flex items-start gap-3">
+                  <MapPin className="mt-0.5 size-4 text-primary" />
+                  <div>
+                    <p className="text-muted-foreground">Location</p>
+                    <p className="mt-1 font-medium">{location}</p>
+                  </div>
                 </div>
               ) : null}
 
-              {website ? (
-                <div>
-                  <p className="text-muted-foreground">Website</p>
-                  <a
-                    href={website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-flex items-center gap-2 font-medium text-primary hover:underline"
-                  >
-                    <Globe className="size-4" />
-                    Visit website
-                  </a>
+              {spa.hours_text ? (
+                <div className="flex items-start gap-3">
+                  <Clock3 className="mt-0.5 size-4 text-primary" />
+                  <div>
+                    <p className="text-muted-foreground">Hours</p>
+                    <p className="mt-1 whitespace-pre-line font-medium">{spa.hours_text}</p>
+                  </div>
                 </div>
               ) : null}
 
-              {phone ? (
+              {spa.listing_categories.length > 0 ? (
                 <div>
-                  <p className="text-muted-foreground">Phone</p>
-                  <a
-                    href={`tel:${phone}`}
-                    className="mt-1 inline-flex items-center gap-2 font-medium text-foreground hover:text-primary"
-                  >
-                    <Phone className="size-4 text-primary" />
-                    {phone}
-                  </a>
+                  <p className="text-muted-foreground">Categories</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {spa.listing_categories.map((category) => (
+                      <Badge key={category} variant="outline">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               ) : null}
 
-              {email ? (
-                <div>
-                  <p className="text-muted-foreground">Email</p>
-                  <a
-                    href={`mailto:${email}`}
-                    className="mt-1 inline-flex items-center gap-2 font-medium text-foreground hover:text-primary"
-                  >
-                    <Mail className="size-4 text-primary" />
-                    {email}
-                  </a>
-                </div>
-              ) : null}
-
-              {!fullAddress && !website && !phone && !email ? (
+              {!location && !spa.hours_text && spa.listing_categories.length === 0 ? (
                 <p className="text-muted-foreground">
-                  Additional directory contact details are not available yet.
+                  Additional directory details are not available yet.
                 </p>
               ) : null}
             </CardContent>
@@ -469,31 +487,6 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                     </span>
                     <ArrowUpRight className="size-4 text-muted-foreground" />
                   </a>
-                ) : null}
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {(spa.day_pass_offered || spa.day_pass_price) ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="size-5 text-primary" />
-                  Day pass
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2 text-sm">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Offered</span>
-                  <span className="font-medium">
-                    {spa.day_pass_offered ? "Yes" : "No"}
-                  </span>
-                </div>
-                {spa.day_pass_price ? (
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-muted-foreground">Price</span>
-                    <span className="font-medium">{spa.day_pass_price}</span>
-                  </div>
                 ) : null}
               </CardContent>
             </Card>
