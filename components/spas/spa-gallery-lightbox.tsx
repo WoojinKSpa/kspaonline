@@ -85,8 +85,8 @@ export function SpaGalleryLightbox({ images }: SpaGalleryLightboxProps) {
                 <Button
                   type="button"
                   variant="secondary"
-                  size="icon"
-                  className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full"
+                  size="sm"
+                  className="absolute left-3 top-1/2 z-10 size-10 -translate-y-1/2 rounded-full p-0"
                   onClick={showPrevious}
                 >
                   <ChevronLeft className="size-5" />
@@ -94,8 +94,8 @@ export function SpaGalleryLightbox({ images }: SpaGalleryLightboxProps) {
                 <Button
                   type="button"
                   variant="secondary"
-                  size="icon"
-                  className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full"
+                  size="sm"
+                  className="absolute right-3 top-1/2 z-10 size-10 -translate-y-1/2 rounded-full p-0"
                   onClick={showNext}
                 >
                   <ChevronRight className="size-5" />
