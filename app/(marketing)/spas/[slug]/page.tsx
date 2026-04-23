@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { SpaGalleryLightbox } from "@/components/spas/spa-gallery-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listSpaImagesBySpaId } from "@/lib/spa-images";
@@ -296,6 +297,11 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
   const galleryImages = images.filter((image) => image.kind === "gallery");
   const featuredImage = galleryImages[0] ?? null;
   const galleryGridImages = galleryImages.slice(1, 5);
+  const lightboxImages = galleryGridImages.map((image, index) => ({
+    id: image.id,
+    public_url: image.public_url,
+    alt: `${spa.name} gallery photo ${index + 2}`,
+  }));
 
   return (
     <Container className="py-16">
@@ -506,27 +512,7 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
             </CardContent>
           </Card>
 
-          {galleryGridImages.length > 0 ? (
-            <Card className="rounded-[24px] shadow-none">
-              <CardHeader>
-                <CardTitle>Gallery</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 pt-0 sm:grid-cols-2">
-                {galleryGridImages.map((image, index) => (
-                  <div
-                    key={image.id}
-                    className="overflow-hidden rounded-2xl border border-border bg-secondary/20"
-                  >
-                    <img
-                      src={image.public_url}
-                      alt={`${spa.name} gallery photo ${index + 2}`}
-                      className="aspect-[4/3] w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ) : null}
+          <SpaGalleryLightbox images={lightboxImages} />
         </aside>
       </div>
     </Container>

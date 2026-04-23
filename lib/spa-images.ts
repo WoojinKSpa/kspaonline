@@ -299,3 +299,31 @@ export async function uploadSpaGalleryImages(spaId: string, files: File[]) {
 
   return createdImages;
 }
+
+export async function setFeaturedSpaImage(spaId: string, imageId: string) {
+  const supabase = createSupabaseAdminClient();
+  const images = await listSpaImagesBySpaId(spaId);
+  const galleryImages = images.filter((image) => image.kind === "gallery");
+  const selectedImage = galleryImages.find((image) => image.id === imageId);
+
+  if (!selectedImage) {
+    throw new Error("Could not find that gallery image.");
+  }
+
+  const reordered = [
+    selectedImage,
+    ...galleryImages.filter((image) => image.id !== imageId),
+  ];
+
+  for (const [index, image] of reordered.entries()) {
+    const { error } = await supabase
+      .from("spa_images")
+      .update({ sort_order: index })
+      .eq("id", image.id)
+      .eq("spa_id", spaId);
+
+    if (error) {
+      throw new Error(`Failed to update featured image: ${error.message}`);
+    }
+  }
+}

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { createAdminSpa, updateAdminSpa } from "@/lib/admin-spas";
 import {
+  setFeaturedSpaImage,
   uploadSpaGalleryImages,
   uploadSpaLogo,
 } from "@/lib/spa-images";
@@ -64,6 +65,25 @@ export async function uploadSpaGalleryImagesAction(
   }
 
   await uploadSpaGalleryImages(id, files);
+
+  revalidatePath(`/admin/spas/${id}` as Route);
+  revalidatePath(`/spas/${slug}` as Route);
+
+  redirect(`/admin/spas/${id}` as Route);
+}
+
+export async function setFeaturedSpaImageAction(
+  id: string,
+  slug: string,
+  formData: FormData
+) {
+  const imageId = formData.get("image_id");
+
+  if (typeof imageId !== "string" || !imageId) {
+    redirect(`/admin/spas/${id}` as Route);
+  }
+
+  await setFeaturedSpaImage(id, imageId);
 
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath(`/spas/${slug}` as Route);

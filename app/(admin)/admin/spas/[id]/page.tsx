@@ -1,4 +1,5 @@
 import {
+  setFeaturedSpaImageAction,
   updateSpaAction,
   uploadSpaGalleryImagesAction,
   uploadSpaLogoAction,
@@ -46,6 +47,7 @@ export default async function AdminSpaEditPage({
       <SpaImageManager
         logoAction={uploadSpaLogoAction.bind(null, spa.id, spa.slug)}
         galleryAction={uploadSpaGalleryImagesAction.bind(null, spa.id, spa.slug)}
+        setFeaturedAction={setFeaturedSpaImageAction.bind(null, spa.id, spa.slug)}
         images={images}
       />
       <SpaEditorForm

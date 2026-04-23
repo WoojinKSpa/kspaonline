@@ -16,12 +16,14 @@ import { Label } from "@/components/ui/label";
 type SpaImageManagerProps = {
   logoAction: (formData: FormData) => void | Promise<void>;
   galleryAction: (formData: FormData) => void | Promise<void>;
+  setFeaturedAction: (formData: FormData) => void | Promise<void>;
   images: SpaImage[];
 };
 
 export function SpaImageManager({
   logoAction,
   galleryAction,
+  setFeaturedAction,
   images,
 }: SpaImageManagerProps) {
   const logo = images.find((image) => image.kind === "logo") ?? null;
@@ -126,6 +128,13 @@ export function SpaImageManager({
                         <Star className="size-3.5" />
                         Featured
                       </span>
+                    ) : (
+                      <form action={setFeaturedAction}>
+                        <input type="hidden" name="image_id" value={image.id} />
+                        <Button type="submit" variant="outline" size="sm">
+                          Make featured
+                        </Button>
+                      </form>
                     ) : null}
                   </div>
                 </div>
