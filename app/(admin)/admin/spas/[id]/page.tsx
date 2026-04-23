@@ -62,6 +62,7 @@ export default async function AdminSpaEditPage({
           slug: spa.slug,
           city: spa.city,
           state: spa.state,
+          address_line_1: spa.address_line_1,
           status: spa.status,
           is_featured: spa.is_featured,
           business_email: spa.business_email,

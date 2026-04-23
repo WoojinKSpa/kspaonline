@@ -29,6 +29,7 @@ type SpaEditorFormProps = {
     slug?: string;
     city?: string;
     state?: string | null;
+    address_line_1?: string | null;
     status?: SpaStatus;
     is_featured?: boolean;
     business_email?: string | null;
@@ -84,6 +85,15 @@ export function SpaEditorForm({
           <div className="flex flex-col gap-2">
             <Label htmlFor="state">State</Label>
             <Input id="state" name="state" defaultValue={defaultValues?.state ?? ""} />
+          </div>
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="address_line_1">Address</Label>
+            <Input
+              id="address_line_1"
+              name="address_line_1"
+              defaultValue={defaultValues?.address_line_1 ?? ""}
+              placeholder="123 Main St"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="status">Status</Label>
