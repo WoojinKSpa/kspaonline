@@ -1,8 +1,9 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-const links = [
+const links: Array<{ href: Route; label: string }> = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/spas", label: "Spas" },
   { href: "/admin/spas/new", label: "Add spa" },
@@ -30,4 +31,3 @@ export function AdminSidebar() {
     </aside>
   );
 }
-

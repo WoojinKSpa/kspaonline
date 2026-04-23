@@ -1,3 +1,10 @@
+import type { Route } from "next";
+
+type NavItem = {
+  href: Route;
+  label: string;
+};
+
 export const siteConfig = {
   name: "Kspa.online",
   description:
@@ -7,6 +14,5 @@ export const siteConfig = {
     { href: "/", label: "Home" },
     { href: "/spas", label: "Browse" },
     { href: "/login", label: "Login" },
-  ],
+  ] satisfies NavItem[],
 };
-
