@@ -327,77 +327,65 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         <div className="grid gap-4">
           <Card>
             <CardContent className="p-6">
-              <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-start">
-                {logoImage ? (
-                  <div className="overflow-hidden rounded-3xl border border-border bg-secondary/30 p-3">
-                    <img
-                      src={logoImage.public_url}
-                      alt={`${spa.name} logo`}
-                      className="h-24 w-24 rounded-2xl object-cover md:h-28 md:w-28"
-                    />
-                  </div>
-                ) : null}
-
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
-                    {primaryCategory ? (
-                      <Badge className="bg-primary text-primary-foreground hover:bg-primary">
-                        {primaryCategory}
-                      </Badge>
-                    ) : null}
-                  </div>
-                  {fullAddress ? (
-                    <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
-                  ) : location ? (
-                    <p className="mt-3 text-base text-muted-foreground">{location}</p>
-                  ) : null}
-                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                    {website ? (
-                      <a
-                        href={website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 hover:text-foreground"
-                      >
-                        <Globe className="size-4" />
-                        Website
-                      </a>
-                    ) : null}
-                    {email ? (
-                      <a
-                        href={`mailto:${email}`}
-                        className="inline-flex items-center gap-2 hover:text-foreground"
-                      >
-                        <Mail className="size-4" />
-                        Email
-                      </a>
-                    ) : null}
-                    {phone ? (
-                      <a
-                        href={`tel:${phone}`}
-                        className="inline-flex items-center gap-2 hover:text-foreground"
-                      >
-                        <Phone className="size-4" />
-                        Phone
-                      </a>
-                    ) : null}
-                  </div>
-                  {spa.summary ? (
-                    <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
-                      {spa.summary}
-                    </p>
-                  ) : null}
-                  {secondaryCategories.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {secondaryCategories.map((category) => (
-                        <Badge key={category} variant="outline">
-                          {category}
-                        </Badge>
-                      ))}
-                    </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
+                  {primaryCategory ? (
+                    <Badge className="bg-primary text-primary-foreground hover:bg-primary">
+                      {primaryCategory}
+                    </Badge>
                   ) : null}
                 </div>
+                {fullAddress ? (
+                  <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
+                ) : location ? (
+                  <p className="mt-3 text-base text-muted-foreground">{location}</p>
+                ) : null}
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  {website ? (
+                    <a
+                      href={website}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Globe className="size-4" />
+                      Website
+                    </a>
+                  ) : null}
+                  {email ? (
+                    <a
+                      href={`mailto:${email}`}
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Mail className="size-4" />
+                      Email
+                    </a>
+                  ) : null}
+                  {phone ? (
+                    <a
+                      href={`tel:${phone}`}
+                      className="inline-flex items-center gap-2 hover:text-foreground"
+                    >
+                      <Phone className="size-4" />
+                      Phone
+                    </a>
+                  ) : null}
+                </div>
+                {spa.summary ? (
+                  <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                    {spa.summary}
+                  </p>
+                ) : null}
+                {secondaryCategories.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {secondaryCategories.map((category) => (
+                      <Badge key={category} variant="outline">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </CardContent>
           </Card>
@@ -476,6 +464,18 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         </div>
 
         <aside className="flex flex-col gap-4">
+          {logoImage ? (
+            <Card className="rounded-[24px] shadow-none">
+              <CardContent className="flex min-h-[180px] items-center justify-center p-6">
+                <img
+                  src={logoImage.public_url}
+                  alt={`${spa.name} logo`}
+                  className="max-h-[140px] w-full object-contain object-center"
+                />
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card className="rounded-[24px] shadow-none">
             <CardHeader>
               <CardTitle>Pricing</CardTitle>
