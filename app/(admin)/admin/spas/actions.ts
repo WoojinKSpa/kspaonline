@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 
 import { createAdminSpa, updateAdminSpa } from "@/lib/admin-spas";
 import {
+  deleteSpaImage,
+  moveSpaImage,
   setFeaturedSpaImage,
   uploadSpaGalleryImages,
   uploadSpaLogo,
@@ -84,6 +86,49 @@ export async function setFeaturedSpaImageAction(
   }
 
   await setFeaturedSpaImage(id, imageId);
+
+  revalidatePath(`/admin/spas/${id}` as Route);
+  revalidatePath(`/spas/${slug}` as Route);
+
+  redirect(`/admin/spas/${id}` as Route);
+}
+
+export async function deleteSpaImageAction(
+  id: string,
+  slug: string,
+  formData: FormData
+) {
+  const imageId = formData.get("image_id");
+
+  if (typeof imageId !== "string" || !imageId) {
+    redirect(`/admin/spas/${id}` as Route);
+  }
+
+  await deleteSpaImage(id, imageId);
+
+  revalidatePath(`/admin/spas/${id}` as Route);
+  revalidatePath(`/spas/${slug}` as Route);
+
+  redirect(`/admin/spas/${id}` as Route);
+}
+
+export async function moveSpaImageAction(
+  id: string,
+  slug: string,
+  formData: FormData
+) {
+  const imageId = formData.get("image_id");
+  const direction = formData.get("direction");
+
+  if (
+    typeof imageId !== "string" ||
+    !imageId ||
+    (direction !== "up" && direction !== "down")
+  ) {
+    redirect(`/admin/spas/${id}` as Route);
+  }
+
+  await moveSpaImage(id, imageId, direction);
 
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath(`/spas/${slug}` as Route);

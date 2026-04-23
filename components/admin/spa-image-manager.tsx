@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { ImagePlus, Images, Star } from "lucide-react";
+import { ArrowDown, ArrowUp, ImagePlus, Images, Star, Trash2 } from "lucide-react";
 
 import { MAX_GALLERY_IMAGE_COUNT, type SpaImage } from "@/lib/spa-images";
 
@@ -17,6 +17,8 @@ type SpaImageManagerProps = {
   logoAction: (formData: FormData) => void | Promise<void>;
   galleryAction: (formData: FormData) => void | Promise<void>;
   setFeaturedAction: (formData: FormData) => void | Promise<void>;
+  moveImageAction: (formData: FormData) => void | Promise<void>;
+  deleteImageAction: (formData: FormData) => void | Promise<void>;
   images: SpaImage[];
 };
 
@@ -24,6 +26,8 @@ export function SpaImageManager({
   logoAction,
   galleryAction,
   setFeaturedAction,
+  moveImageAction,
+  deleteImageAction,
   images,
 }: SpaImageManagerProps) {
   const logo = images.find((image) => image.kind === "logo") ?? null;
@@ -48,6 +52,15 @@ export function SpaImageManager({
                 alt="Business logo"
                 className="h-40 w-full rounded-2xl object-cover"
               />
+              <div className="mt-3 flex justify-end">
+                <form action={deleteImageAction}>
+                  <input type="hidden" name="image_id" value={logo.id} />
+                  <Button type="submit" variant="outline" size="sm">
+                    <Trash2 data-icon="inline-start" />
+                    Delete logo
+                  </Button>
+                </form>
+              </div>
             </div>
           ) : (
             <div className="rounded-3xl border border-dashed border-border bg-secondary/20 px-4 py-10 text-center text-sm text-muted-foreground">
@@ -128,7 +141,10 @@ export function SpaImageManager({
                         <Star className="size-3.5" />
                         Featured
                       </span>
-                    ) : (
+                    ) : null}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {index > 0 ? (
                       <form action={setFeaturedAction}>
                         <input type="hidden" name="image_id" value={image.id} />
                         <Button type="submit" variant="outline" size="sm">
@@ -136,6 +152,34 @@ export function SpaImageManager({
                         </Button>
                       </form>
                     ) : null}
+                    <form action={moveImageAction}>
+                      <input type="hidden" name="image_id" value={image.id} />
+                      <input type="hidden" name="direction" value="up" />
+                      <Button type="submit" variant="outline" size="sm" disabled={index === 0}>
+                        <ArrowUp data-icon="inline-start" />
+                        Move up
+                      </Button>
+                    </form>
+                    <form action={moveImageAction}>
+                      <input type="hidden" name="image_id" value={image.id} />
+                      <input type="hidden" name="direction" value="down" />
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        disabled={index === galleryImages.length - 1}
+                      >
+                        <ArrowDown data-icon="inline-start" />
+                        Move down
+                      </Button>
+                    </form>
+                    <form action={deleteImageAction}>
+                      <input type="hidden" name="image_id" value={image.id} />
+                      <Button type="submit" variant="outline" size="sm">
+                        <Trash2 data-icon="inline-start" />
+                        Delete
+                      </Button>
+                    </form>
                   </div>
                 </div>
               ))}

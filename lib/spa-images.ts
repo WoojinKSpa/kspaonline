@@ -327,3 +327,84 @@ export async function setFeaturedSpaImage(spaId: string, imageId: string) {
     }
   }
 }
+
+async function resequenceGalleryImages(spaId: string) {
+  const supabase = createSupabaseAdminClient();
+  const images = await listSpaImagesBySpaId(spaId);
+  const galleryImages = images.filter((image) => image.kind === "gallery");
+
+  for (const [index, image] of galleryImages.entries()) {
+    if (image.sort_order === index) {
+      continue;
+    }
+
+    const { error } = await supabase
+      .from("spa_images")
+      .update({ sort_order: index })
+      .eq("id", image.id)
+      .eq("spa_id", spaId);
+
+    if (error) {
+      throw new Error(`Failed to update image order: ${error.message}`);
+    }
+  }
+}
+
+export async function deleteSpaImage(spaId: string, imageId: string) {
+  const supabase = createSupabaseAdminClient();
+  const images = await listSpaImagesBySpaId(spaId);
+  const image = images.find((item) => item.id === imageId);
+
+  if (!image) {
+    throw new Error("Could not find that image.");
+  }
+
+  await removeStorageObject(image.storage_path);
+
+  const { error } = await supabase
+    .from("spa_images")
+    .delete()
+    .eq("id", image.id)
+    .eq("spa_id", spaId);
+
+  if (error) {
+    throw new Error(`Failed to delete image: ${error.message}`);
+  }
+
+  if (image.kind === "gallery") {
+    await resequenceGalleryImages(spaId);
+  }
+}
+
+export async function moveSpaImage(spaId: string, imageId: string, direction: "up" | "down") {
+  const supabase = createSupabaseAdminClient();
+  const images = await listSpaImagesBySpaId(spaId);
+  const galleryImages = images.filter((image) => image.kind === "gallery");
+  const currentIndex = galleryImages.findIndex((image) => image.id === imageId);
+
+  if (currentIndex === -1) {
+    throw new Error("Could not find that gallery image.");
+  }
+
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+  if (targetIndex < 0 || targetIndex >= galleryImages.length) {
+    return;
+  }
+
+  const reordered = [...galleryImages];
+  const [movedImage] = reordered.splice(currentIndex, 1);
+  reordered.splice(targetIndex, 0, movedImage);
+
+  for (const [index, image] of reordered.entries()) {
+    const { error } = await supabase
+      .from("spa_images")
+      .update({ sort_order: index })
+      .eq("id", image.id)
+      .eq("spa_id", spaId);
+
+    if (error) {
+      throw new Error(`Failed to move image: ${error.message}`);
+    }
+  }
+}
