@@ -9,35 +9,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AMENITY_CATEGORIES, normalizeAmenitySelection } from "@/lib/amenities";
 import type { SpaStatus } from "@/lib/admin-spas";
-
-const AMENITY_OPTIONS = [
-  "24 hours",
-  "Accepts Credit Cards",
-  "Childcare",
-  "Cold Plunge",
-  "Cold Room",
-  "Elevator",
-  "Gendered Separated",
-  "Group Area",
-  "Hot Tub",
-  "Jade Room",
-  "Korean Scrubs",
-  "Locker Room",
-  "Massage Service",
-  "Offers Free Water",
-  "Outdoor Seating",
-  "Reservations",
-  "Restaurant",
-  "Sauna",
-  "Sleeping Space",
-  "Smoking Area",
-  "Spa Treatments",
-  "Steam Room",
-  "Valet Parking",
-  "Wheelchair Accessible",
-  "Wireless Internet",
-] as const;
 
 const CATEGORY_OPTIONS = [
   "Gym",
@@ -80,7 +53,9 @@ export function SpaEditorForm({
   formAction,
   defaultValues,
 }: SpaEditorFormProps) {
-  const selectedAmenities = new Set(defaultValues?.amenities ?? []);
+  const selectedAmenities = new Set(
+    normalizeAmenitySelection(defaultValues?.amenities ?? [])
+  );
   const selectedCategories = new Set(defaultValues?.listing_categories ?? []);
 
   return (
@@ -89,7 +64,7 @@ export function SpaEditorForm({
         <CardTitle>Spa profile</CardTitle>
         <CardDescription>
           Create or update a directory listing and choose available amenities
-          from the preset options below.
+          from the grouped options below.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -272,27 +247,38 @@ export function SpaEditorForm({
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="amenities">Amenities</Label>
-            <p className="text-sm italic text-muted-foreground">
-              Please choose category to display available amenities
+            <p className="text-sm text-muted-foreground">
+              Amenities are grouped for display automatically on the public listing.
             </p>
-            <div
-              id="amenities"
-              className="grid gap-3 rounded-3xl border border-border bg-secondary/30 p-4 sm:grid-cols-2"
-            >
-              {AMENITY_OPTIONS.map((amenity) => (
-                <label
-                  key={amenity}
-                  className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-3 text-sm font-medium"
+            <div id="amenities" className="grid gap-4">
+              {AMENITY_CATEGORIES.map((category) => (
+                <div
+                  key={category.title}
+                  className="rounded-3xl border border-border bg-secondary/30 p-4"
                 >
-                  <input
-                    type="checkbox"
-                    name="amenities"
-                    value={amenity}
-                    defaultChecked={selectedAmenities.has(amenity)}
-                    className="size-4 rounded border-input"
-                  />
-                  {amenity}
-                </label>
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-foreground">{category.title}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {category.items.map((amenity) => (
+                      <label
+                        key={amenity.label}
+                        className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-3 text-sm font-medium"
+                      >
+                        <input
+                          type="checkbox"
+                          name="amenities"
+                          value={amenity.label}
+                          defaultChecked={selectedAmenities.has(amenity.label)}
+                          className="size-4 rounded border-input"
+                        />
+                        <span className={amenity.italic ? "italic" : undefined}>
+                          {amenity.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

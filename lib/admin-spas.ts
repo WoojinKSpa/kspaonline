@@ -1,3 +1,4 @@
+import { normalizeAmenitySelection } from "@/lib/amenities";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export type SpaStatus = "draft" | "published" | "archived";
@@ -93,10 +94,12 @@ function extractMissingOptionalColumn(message: string, columns: readonly string[
 }
 
 function normalizeAmenities(values: FormDataEntryValue[]) {
-  return values
+  return normalizeAmenitySelection(
+    values
     .filter((value): value is string => typeof value === "string")
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+  );
 }
 
 function normalizeMultiValue(values: FormDataEntryValue[]) {
@@ -218,7 +221,7 @@ function applyMissingColumnDefaults(
     amenities: missingColumns.includes("amenities")
       ? []
       : Array.isArray(row.amenities)
-        ? row.amenities.map((value) => String(value))
+        ? normalizeAmenitySelection(row.amenities.map((value) => String(value)))
         : [],
   };
 }

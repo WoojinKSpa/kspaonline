@@ -15,40 +15,16 @@ import {
   XCircle,
 } from "lucide-react";
 
+import {
+  AMENITY_CATEGORIES,
+  normalizeAmenitySelection,
+} from "@/lib/amenities";
 import { Container } from "@/components/layout/container";
 import { SpaGalleryLightbox } from "@/components/spas/spa-gallery-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listSpaImagesBySpaId } from "@/lib/spa-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-const AMENITY_OPTIONS = [
-  "24 hours",
-  "Accepts Credit Cards",
-  "Childcare",
-  "Cold Plunge",
-  "Cold Room",
-  "Elevator",
-  "Gendered Separated",
-  "Group Area",
-  "Hot Tub",
-  "Jade Room",
-  "Korean Scrubs",
-  "Locker Room",
-  "Massage Service",
-  "Offers Free Water",
-  "Outdoor Seating",
-  "Reservations",
-  "Restaurant",
-  "Sauna",
-  "Sleeping Space",
-  "Smoking Area",
-  "Spa Treatments",
-  "Steam Room",
-  "Valet Parking",
-  "Wheelchair Accessible",
-  "Wireless Internet",
-] as const;
 
 type SpaDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -289,7 +265,7 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
     { label: "Twitter / X", href: spa.twitter_url },
     { label: "YouTube", href: spa.youtube_url },
   ].filter((item): item is { label: string; href: string } => Boolean(item.href));
-  const enabledAmenities = new Set(spa.amenities);
+  const enabledAmenities = new Set(normalizeAmenitySelection(spa.amenities));
   const primaryCategory = spa.listing_categories[0] ?? null;
   const secondaryCategories = spa.listing_categories.slice(1);
   const images = spa.id ? await listSpaImagesBySpaId(spa.id) : [];
@@ -492,23 +468,34 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
             <CardHeader>
               <CardTitle>Amenities</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-x-6 gap-y-2 pt-0 text-sm sm:grid-cols-2">
-              {AMENITY_OPTIONS.map((amenity) => {
-                const enabled = enabledAmenities.has(amenity);
-                return (
-                  <div
-                    key={amenity}
-                    className="inline-flex items-center gap-2 text-muted-foreground"
-                  >
-                    {enabled ? (
-                      <CheckCircle2 className="size-4 text-green-600" />
-                    ) : (
-                      <XCircle className="size-4 text-foreground" />
-                    )}
-                    <span>{amenity}</span>
+            <CardContent className="grid gap-5 pt-0 text-sm">
+              {AMENITY_CATEGORIES.map((category) => (
+                <div key={category.title}>
+                  <h3 className="mb-3 text-sm font-semibold text-foreground">
+                    {category.title}
+                  </h3>
+                  <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                    {category.items.map((amenity) => {
+                      const enabled = enabledAmenities.has(amenity.label);
+                      return (
+                        <div
+                          key={amenity.label}
+                          className="inline-flex items-center gap-2 text-muted-foreground"
+                        >
+                          {enabled ? (
+                            <CheckCircle2 className="size-4 text-green-600" />
+                          ) : (
+                            <XCircle className="size-4 text-foreground" />
+                          )}
+                          <span className={amenity.italic ? "italic" : undefined}>
+                            {amenity.label}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </CardContent>
           </Card>
 
