@@ -6,12 +6,9 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronLeft,
-  Clock3,
   Globe,
   Mail,
-  MapPin,
   Phone,
-  ScrollText,
   Share2,
   Star,
   XCircle,
@@ -289,6 +286,7 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
   ].filter((item): item is { label: string; href: string } => Boolean(item.href));
   const enabledAmenities = new Set(spa.amenities);
   const primaryCategory = spa.listing_categories[0] ?? null;
+  const secondaryCategories = spa.listing_categories.slice(1);
 
   return (
     <Container className="py-16">
@@ -303,7 +301,7 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
       <div className="mt-8 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="grid gap-4">
           <Card>
-            <CardContent className="grid gap-4 p-6 md:grid-cols-[1.25fr_0.75fr] md:items-start">
+            <CardContent className="p-6">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
@@ -354,44 +352,15 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                     {spa.summary}
                   </p>
                 ) : null}
-              </div>
-
-              <div className="grid gap-4">
-                <Card className="rounded-[24px] shadow-none">
-                  <CardHeader className="pb-3">
-                    <CardTitle>Pricing</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-sm">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-muted-foreground">{pricingLabel}</span>
-                      <span className="font-medium">{spa.day_pass_price || pricing || "N/A"}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-[24px] shadow-none">
-                  <CardHeader className="pb-3">
-                    <CardTitle>Amenities</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-x-6 gap-y-2 pt-0 text-sm sm:grid-cols-2">
-                    {AMENITY_OPTIONS.map((amenity) => {
-                      const enabled = enabledAmenities.has(amenity);
-                      return (
-                        <div
-                          key={amenity}
-                          className="inline-flex items-center gap-2 text-muted-foreground"
-                        >
-                          {enabled ? (
-                            <CheckCircle2 className="size-4 text-green-600" />
-                          ) : (
-                            <XCircle className="size-4 text-foreground" />
-                          )}
-                          <span>{amenity}</span>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
+                {secondaryCategories.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {secondaryCategories.map((category) => (
+                      <Badge key={category} variant="outline">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </CardContent>
           </Card>
@@ -402,128 +371,107 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                 <SectionCard title="About this spa" body={spa.description} />
               </div>
             ) : null}
+            {spa.hours_text ? <SectionCard title="Hours" body={spa.hours_text} /> : null}
             <SectionCard title="What to know" body={spa.what_to_know} />
             <SectionCard title="Important notes" body={spa.important_notes} />
+            {(spa.google_review_url || spa.yelp_review_url) ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reviews</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3 text-sm">
+                  {spa.google_review_url ? (
+                    <a
+                      href={spa.google_review_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Star className="size-4 text-primary" />
+                        Google reviews
+                      </span>
+                      <ArrowUpRight className="size-4 text-muted-foreground" />
+                    </a>
+                  ) : null}
+                  {spa.yelp_review_url ? (
+                    <a
+                      href={spa.yelp_review_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Star className="size-4 text-primary" />
+                        Yelp reviews
+                      </span>
+                      <ArrowUpRight className="size-4 text-muted-foreground" />
+                    </a>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
+            {socialLinks.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share2 className="size-5 text-primary" />
+                    Social links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3 text-sm">
+                  {socialLinks.map((item) => (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
+                    >
+                      <span>{item.label}</span>
+                      <ArrowUpRight className="size-4 text-muted-foreground" />
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
           </div>
         </div>
 
         <aside className="flex flex-col gap-4">
-          <Card>
+          <Card className="rounded-[24px] shadow-none">
             <CardHeader>
-              <CardTitle>Directory details</CardTitle>
+              <CardTitle>Pricing</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4 text-sm">
-              {location ? (
-                <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 size-4 text-primary" />
-                  <div>
-                    <p className="text-muted-foreground">Location</p>
-                    <p className="mt-1 font-medium">{location}</p>
-                  </div>
-                </div>
-              ) : null}
-
-              {spa.hours_text ? (
-                <div className="flex items-start gap-3">
-                  <Clock3 className="mt-0.5 size-4 text-primary" />
-                  <div>
-                    <p className="text-muted-foreground">Hours</p>
-                    <p className="mt-1 whitespace-pre-line font-medium">{spa.hours_text}</p>
-                  </div>
-                </div>
-              ) : null}
-
-              {spa.listing_categories.length > 0 ? (
-                <div>
-                  <p className="text-muted-foreground">Categories</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {spa.listing_categories.map((category) => (
-                      <Badge key={category} variant="outline">
-                        {category}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {!location && !spa.hours_text && spa.listing_categories.length === 0 ? (
-                <p className="text-muted-foreground">
-                  Additional directory details are not available yet.
-                </p>
-              ) : null}
+            <CardContent className="pt-0 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">{pricingLabel}</span>
+                <span className="font-medium">{spa.day_pass_price || pricing || "N/A"}</span>
+              </div>
             </CardContent>
           </Card>
 
-          {(spa.google_review_url || spa.yelp_review_url) ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Reviews</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3 text-sm">
-                {spa.google_review_url ? (
-                  <a
-                    href={spa.google_review_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Star className="size-4 text-primary" />
-                      Google reviews
-                    </span>
-                    <ArrowUpRight className="size-4 text-muted-foreground" />
-                  </a>
-                ) : null}
-                {spa.yelp_review_url ? (
-                  <a
-                    href={spa.yelp_review_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Star className="size-4 text-primary" />
-                      Yelp reviews
-                    </span>
-                    <ArrowUpRight className="size-4 text-muted-foreground" />
-                  </a>
-                ) : null}
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {socialLinks.length > 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Share2 className="size-5 text-primary" />
-                  Social links
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
-                {socialLinks.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-between rounded-2xl border border-border px-4 py-3 font-medium hover:bg-secondary"
-                  >
-                    <span>{item.label}</span>
-                    <ArrowUpRight className="size-4 text-muted-foreground" />
-                  </a>
-                ))}
-              </CardContent>
-            </Card>
-          ) : null}
-
-          <Card>
+          <Card className="rounded-[24px] shadow-none">
             <CardHeader>
-              <CardTitle>Listing status</CardTitle>
+              <CardTitle>Amenities</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-3 text-sm text-muted-foreground">
-              <ScrollText className="size-4 text-primary" />
-              This spa is currently published in the public directory.
+            <CardContent className="grid gap-x-6 gap-y-2 pt-0 text-sm sm:grid-cols-2">
+              {AMENITY_OPTIONS.map((amenity) => {
+                const enabled = enabledAmenities.has(amenity);
+                return (
+                  <div
+                    key={amenity}
+                    className="inline-flex items-center gap-2 text-muted-foreground"
+                  >
+                    {enabled ? (
+                      <CheckCircle2 className="size-4 text-green-600" />
+                    ) : (
+                      <XCircle className="size-4 text-foreground" />
+                    )}
+                    <span>{amenity}</span>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </aside>
