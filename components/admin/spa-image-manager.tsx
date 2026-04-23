@@ -91,8 +91,8 @@ export function SpaImageManager({
         <CardHeader>
           <CardTitle>Business photos</CardTitle>
           <CardDescription>
-            Upload up to {MAX_GALLERY_IMAGE_COUNT} photos. The first photo becomes the
-            featured image on the public listing.
+            Upload up to {MAX_GALLERY_IMAGE_COUNT} photos. Keep the first photo as the
+            featured image and reorder the rest from here.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -121,43 +121,58 @@ export function SpaImageManager({
           </form>
 
           {galleryImages.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {galleryImages.map((image, index) => (
                 <div
                   key={image.id}
-                  className="overflow-hidden rounded-3xl border border-border bg-secondary/30 p-3"
+                  className="overflow-hidden rounded-3xl border border-border bg-background p-3"
                 >
                   <img
                     src={image.public_url}
                     alt={index === 0 ? "Featured business photo" : `Business photo ${index + 1}`}
-                    className="h-40 w-full rounded-2xl object-cover"
+                    className="h-32 w-full rounded-2xl object-cover"
                   />
-                  <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-                    <span className="font-medium text-foreground">
-                      {index === 0 ? "Featured image" : `Photo ${index + 1}`}
-                    </span>
-                    {index === 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                        <Star className="size-3.5" />
-                        Featured
-                      </span>
-                    ) : null}
+                  <div className="mt-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {index === 0 ? "Featured image" : `Photo ${index + 1}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Position {index + 1} of {galleryImages.length}
+                      </p>
+                    </div>
+                    <div className="shrink-0">
+                      {index === 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+                          <Star className="size-3.5" />
+                          Featured
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {index > 0 ? (
                       <form action={setFeaturedAction}>
                         <input type="hidden" name="image_id" value={image.id} />
-                        <Button type="submit" variant="outline" size="sm">
-                          Make featured
+                        <Button type="submit" variant="outline" size="sm" className="h-8 px-3">
+                          <Star data-icon="inline-start" />
+                          Feature
                         </Button>
                       </form>
                     ) : null}
                     <form action={moveImageAction}>
                       <input type="hidden" name="image_id" value={image.id} />
                       <input type="hidden" name="direction" value="up" />
-                      <Button type="submit" variant="outline" size="sm" disabled={index === 0}>
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        disabled={index === 0}
+                        className="h-8 px-3"
+                      >
                         <ArrowUp data-icon="inline-start" />
-                        Move up
+                        Up
                       </Button>
                     </form>
                     <form action={moveImageAction}>
@@ -168,14 +183,20 @@ export function SpaImageManager({
                         variant="outline"
                         size="sm"
                         disabled={index === galleryImages.length - 1}
+                        className="h-8 px-3"
                       >
                         <ArrowDown data-icon="inline-start" />
-                        Move down
+                        Down
                       </Button>
                     </form>
                     <form action={deleteImageAction}>
                       <input type="hidden" name="image_id" value={image.id} />
-                      <Button type="submit" variant="outline" size="sm">
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-destructive hover:bg-destructive/5 hover:text-destructive"
+                      >
                         <Trash2 data-icon="inline-start" />
                         Delete
                       </Button>
