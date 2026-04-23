@@ -1,3 +1,4 @@
+import { createSpaAction } from "@/app/(admin)/admin/spas/actions";
 import { SpaEditorForm } from "@/components/admin/spa-editor-form";
 import { PageIntro } from "@/components/layout/page-intro";
 
@@ -11,10 +12,9 @@ export default function NewSpaPage() {
       <PageIntro
         eyebrow="Admin"
         title="Create a new spa"
-        description="This placeholder editor form is designed to become a Supabase-backed create flow."
+        description="Create a new directory listing using a server-side admin action."
       />
-      <SpaEditorForm submitLabel="Create spa" />
+      <SpaEditorForm formAction={createSpaAction} submitLabel="Create spa" />
     </div>
   );
 }
-
