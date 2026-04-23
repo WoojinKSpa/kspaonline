@@ -132,7 +132,12 @@ async function getPublishedSpaBySlug(slug: string) {
     })
   );
 
-  const optionalData = Object.fromEntries(optionalFieldResults);
+  const optionalData = optionalFieldResults.reduce<
+    Partial<Record<(typeof optionalFields)[number], unknown | null>>
+  >((accumulator, [field, value]) => {
+    accumulator[field] = value;
+    return accumulator;
+  }, {});
 
   return {
     slug: spa.slug ?? slug,
