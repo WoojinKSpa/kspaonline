@@ -51,9 +51,8 @@ export const AMENITY_CATEGORIES: AmenityCategory[] = [
     ],
   },
   {
-    title: "Extra Services",
+    title: "Extra Services (Reservations Required)",
     items: [
-      { label: "Reservations Required", italic: true },
       { label: "Korean Body Scrubs" },
       { label: "Massage Services" },
       { label: "Restaurant" },
