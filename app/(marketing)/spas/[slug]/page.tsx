@@ -139,44 +139,46 @@ async function getPublishedSpaBySlug(slug: string) {
     return accumulator;
   }, {});
 
+  const asNullableString = (value: unknown): string | null =>
+    typeof value === "string" ? value : null;
+
+  const asStringArray = (value: unknown): string[] =>
+    Array.isArray(value) ? value.map((item) => String(item)) : [];
+
+  const asBoolean = (value: unknown): boolean =>
+    typeof value === "boolean" ? value : Boolean(value);
+
   return {
     slug: spa.slug ?? slug,
     name: spa.name ?? "Untitled spa",
     city: spa.city ?? null,
     state: spa.state ?? null,
-    summary: optionalData.summary ?? null,
-    description: optionalData.description ?? null,
-    address_line_1: optionalData.address_line_1 ?? null,
-    address_line_2: optionalData.address_line_2 ?? null,
-    postal_code: optionalData.postal_code ?? null,
-    website: optionalData.website ?? null,
-    phone: optionalData.phone ?? null,
-    email: optionalData.email ?? null,
-    business_website: optionalData.business_website ?? null,
-    business_phone: optionalData.business_phone ?? null,
-    business_email: optionalData.business_email ?? null,
-    facebook_url: optionalData.facebook_url ?? null,
-    instagram_url: optionalData.instagram_url ?? null,
-    tiktok_url: optionalData.tiktok_url ?? null,
-    twitter_url: optionalData.twitter_url ?? null,
-    youtube_url: optionalData.youtube_url ?? null,
-    hours_text: optionalData.hours_text ?? null,
-    pricing_text: optionalData.pricing_text ?? null,
-    day_pass_offered: Boolean(optionalData.day_pass_offered),
-    day_pass_price:
-      typeof optionalData.day_pass_price === "string"
-        ? optionalData.day_pass_price
-        : null,
-    listing_categories: Array.isArray(optionalData.listing_categories)
-      ? optionalData.listing_categories.map((value) => String(value))
-      : [],
-    amenities: Array.isArray(optionalData.amenities)
-      ? optionalData.amenities.map((value) => String(value))
-      : [],
-    what_to_know: optionalData.what_to_know ?? null,
-    important_notes: optionalData.important_notes ?? null,
-    google_review_url: optionalData.google_review_url ?? null,
-    yelp_review_url: optionalData.yelp_review_url ?? null,
+    summary: asNullableString(optionalData.summary),
+    description: asNullableString(optionalData.description),
+    address_line_1: asNullableString(optionalData.address_line_1),
+    address_line_2: asNullableString(optionalData.address_line_2),
+    postal_code: asNullableString(optionalData.postal_code),
+    website: asNullableString(optionalData.website),
+    phone: asNullableString(optionalData.phone),
+    email: asNullableString(optionalData.email),
+    business_website: asNullableString(optionalData.business_website),
+    business_phone: asNullableString(optionalData.business_phone),
+    business_email: asNullableString(optionalData.business_email),
+    facebook_url: asNullableString(optionalData.facebook_url),
+    instagram_url: asNullableString(optionalData.instagram_url),
+    tiktok_url: asNullableString(optionalData.tiktok_url),
+    twitter_url: asNullableString(optionalData.twitter_url),
+    youtube_url: asNullableString(optionalData.youtube_url),
+    hours_text: asNullableString(optionalData.hours_text),
+    pricing_text: asNullableString(optionalData.pricing_text),
+    day_pass_offered: asBoolean(optionalData.day_pass_offered),
+    day_pass_price: asNullableString(optionalData.day_pass_price),
+    listing_categories: asStringArray(optionalData.listing_categories),
+    amenities: asStringArray(optionalData.amenities),
+    what_to_know: asNullableString(optionalData.what_to_know),
+    important_notes: asNullableString(optionalData.important_notes),
+    google_review_url: asNullableString(optionalData.google_review_url),
+    yelp_review_url: asNullableString(optionalData.yelp_review_url),
   } satisfies PublicSpa;
 }
 
