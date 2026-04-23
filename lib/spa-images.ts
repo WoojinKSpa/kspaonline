@@ -11,6 +11,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
   "image/webp",
   "image/avif",
 ]);
+const ALLOWED_IMAGE_MIME_TYPES = [...ALLOWED_IMAGE_TYPES];
 
 export type SpaImageKind = "logo" | "gallery";
 
@@ -87,6 +88,23 @@ function ensureValidImage(file: File) {
 
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
     throw new Error("Each image must be 8 MB or smaller.");
+  }
+}
+
+async function ensureSpaImageBucketExists() {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.storage.createBucket(SPA_IMAGE_BUCKET, {
+    public: true,
+    fileSizeLimit: MAX_IMAGE_SIZE_BYTES,
+    allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+  });
+
+  if (
+    error &&
+    !error.message.toLowerCase().includes("already exists") &&
+    !error.message.toLowerCase().includes("duplicate")
+  ) {
+    throw new Error(`Failed to prepare image uploads: ${error.message}`);
   }
 }
 
@@ -185,6 +203,7 @@ async function createImageRecord(input: {
 
 async function uploadFileToStorage(spaId: string, kind: SpaImageKind, file: File) {
   ensureValidImage(file);
+  await ensureSpaImageBucketExists();
 
   const baseName = sanitizeBaseName(file.name.replace(/\.[^.]+$/, ""));
   const extension = inferExtension(file);
@@ -192,11 +211,22 @@ async function uploadFileToStorage(spaId: string, kind: SpaImageKind, file: File
   const buffer = Buffer.from(await file.arrayBuffer());
   const supabase = createSupabaseAdminClient();
 
-  const { error } = await supabase.storage.from(SPA_IMAGE_BUCKET).upload(storagePath, buffer, {
+  let { error } = await supabase.storage.from(SPA_IMAGE_BUCKET).upload(storagePath, buffer, {
     contentType: file.type,
     cacheControl: "31536000",
     upsert: false,
   });
+
+  if (error?.message.toLowerCase().includes("bucket not found")) {
+    await ensureSpaImageBucketExists();
+    error = (
+      await supabase.storage.from(SPA_IMAGE_BUCKET).upload(storagePath, buffer, {
+        contentType: file.type,
+        cacheControl: "31536000",
+        upsert: false,
+      })
+    ).error;
+  }
 
   if (error) {
     throw new Error(`Failed to upload image: ${error.message}`);
