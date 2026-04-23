@@ -1,5 +1,6 @@
 "use server";
 
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -23,8 +24,8 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  const destination =
-    typeof redirectTo === "string" && redirectTo.startsWith("/")
+  const destination: Route =
+    redirectTo === "/admin" || redirectTo === "/admin/spas"
       ? redirectTo
       : "/admin";
 
