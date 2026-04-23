@@ -152,10 +152,18 @@ function applyMissingColumnDefaults(
   };
 }
 
+function toRowRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Unexpected Supabase row shape.");
+  }
+
+  return value as Record<string, unknown>;
+}
+
 export async function listAdminSpas() {
   const { data, missingColumns } = await selectManyWithOptionalColumns(REQUIRED_LIST_COLUMNS);
   return data.map((row) =>
-    applyMissingColumnDefaults(row as Record<string, unknown>, missingColumns)
+    applyMissingColumnDefaults(toRowRecord(row), missingColumns)
   );
 }
 
@@ -166,7 +174,7 @@ export async function getAdminSpaById(id: string) {
     return null;
   }
 
-  return applyMissingColumnDefaults(data as Record<string, unknown>, missingColumns);
+  return applyMissingColumnDefaults(toRowRecord(data), missingColumns);
 }
 
 function buildSpaPayload(formData: FormData): SpaPayload {
@@ -243,7 +251,8 @@ async function writeSpaWithFallback(
       throw new Error(`Failed to ${mode} spa: ${error.message}`);
     }
 
-    const { [missingKey]: _removed, ...rest } = activePayload;
+    const rest = { ...activePayload };
+    delete rest[missingKey];
     activePayload = rest;
   }
 }
