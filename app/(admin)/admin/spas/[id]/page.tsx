@@ -47,7 +47,7 @@ export default async function AdminSpaEditPage({
           is_featured: spa.is_featured,
           summary: spa.summary,
           description: spa.description ?? "",
-          amenities: spa.amenities.join(", "),
+          amenities: spa.amenities,
         }}
       />
     </div>

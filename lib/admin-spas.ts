@@ -59,13 +59,9 @@ function extractMissingOptionalColumn(message: string, columns: readonly string[
   return columns.find((column) => message.includes(column)) ?? null;
 }
 
-function normalizeAmenities(value: FormDataEntryValue | null) {
-  if (typeof value !== "string") {
-    return [];
-  }
-
-  return value
-    .split(",")
+function normalizeAmenities(values: FormDataEntryValue[]) {
+  return values
+    .filter((value): value is string => typeof value === "string")
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -213,7 +209,7 @@ function buildSpaPayload(formData: FormData): SpaPayload {
     summary: emptyToNull(formData.get("summary")),
     description: emptyToNull(formData.get("description")),
     is_featured: formData.get("is_featured") === "on",
-    amenities: normalizeAmenities(formData.get("amenities")),
+    amenities: normalizeAmenities(formData.getAll("amenities")),
   };
 }
 
