@@ -39,6 +39,15 @@ const AMENITY_OPTIONS = [
   "Wireless Internet",
 ] as const;
 
+const CATEGORY_OPTIONS = [
+  "Gym",
+  "Hammam",
+  "Korean Spa",
+  "Onsen",
+  "Resort Spa",
+  "Sauna Only",
+] as const;
+
 type SpaEditorFormProps = {
   submitLabel: string;
   formAction: (formData: FormData) => void | Promise<void>;
@@ -49,6 +58,17 @@ type SpaEditorFormProps = {
     state?: string | null;
     status?: SpaStatus;
     is_featured?: boolean;
+    business_email?: string | null;
+    business_website?: string | null;
+    business_phone?: string | null;
+    facebook_url?: string | null;
+    instagram_url?: string | null;
+    tiktok_url?: string | null;
+    twitter_url?: string | null;
+    youtube_url?: string | null;
+    day_pass_offered?: boolean;
+    day_pass_price?: string | null;
+    listing_categories?: string[];
     summary?: string | null;
     description?: string;
     amenities?: string[];
@@ -61,6 +81,7 @@ export function SpaEditorForm({
   defaultValues,
 }: SpaEditorFormProps) {
   const selectedAmenities = new Set(defaultValues?.amenities ?? []);
+  const selectedCategories = new Set(defaultValues?.listing_categories ?? []);
 
   return (
     <Card>
@@ -112,6 +133,124 @@ export function SpaEditorForm({
               />
               Featured spa
             </label>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="business_email">Business Email</Label>
+            <Input
+              id="business_email"
+              name="business_email"
+              type="email"
+              defaultValue={defaultValues?.business_email ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="business_phone">Business Phone</Label>
+            <Input
+              id="business_phone"
+              name="business_phone"
+              defaultValue={defaultValues?.business_phone ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="business_website">Business Website</Label>
+            <Input
+              id="business_website"
+              name="business_website"
+              type="url"
+              defaultValue={defaultValues?.business_website ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="facebook_url">Facebook Link</Label>
+            <Input
+              id="facebook_url"
+              name="facebook_url"
+              type="url"
+              defaultValue={defaultValues?.facebook_url ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="instagram_url">Instagram Link</Label>
+            <Input
+              id="instagram_url"
+              name="instagram_url"
+              type="url"
+              defaultValue={defaultValues?.instagram_url ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="tiktok_url">TikTok Link</Label>
+            <Input
+              id="tiktok_url"
+              name="tiktok_url"
+              type="url"
+              defaultValue={defaultValues?.tiktok_url ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="twitter_url">Twitter/X Link</Label>
+            <Input
+              id="twitter_url"
+              name="twitter_url"
+              type="url"
+              defaultValue={defaultValues?.twitter_url ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="youtube_url">YouTube Link</Label>
+            <Input
+              id="youtube_url"
+              name="youtube_url"
+              type="url"
+              defaultValue={defaultValues?.youtube_url ?? ""}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="day_pass_offered">Day Pass Offered?</Label>
+            <select
+              id="day_pass_offered"
+              name="day_pass_offered"
+              defaultValue={defaultValues?.day_pass_offered ? "yes" : "no"}
+              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="day_pass_price">Day Pass Price</Label>
+            <Input
+              id="day_pass_price"
+              name="day_pass_price"
+              defaultValue={defaultValues?.day_pass_price ?? ""}
+              placeholder="$45"
+            />
+          </div>
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="listing_categories">Listing Categories</Label>
+            <p className="text-sm text-muted-foreground">
+              Choose one or more categories for this listing.
+            </p>
+            <div
+              id="listing_categories"
+              className="grid gap-3 rounded-3xl border border-border bg-secondary/30 p-4 sm:grid-cols-2"
+            >
+              {CATEGORY_OPTIONS.map((category) => (
+                <label
+                  key={category}
+                  className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-3 text-sm font-medium"
+                >
+                  <input
+                    type="checkbox"
+                    name="listing_categories"
+                    value={category}
+                    defaultChecked={selectedCategories.has(category)}
+                    className="size-4 rounded border-input"
+                  />
+                  {category}
+                </label>
+              ))}
+            </div>
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="summary">Summary</Label>

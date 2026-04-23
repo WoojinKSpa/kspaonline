@@ -10,6 +10,17 @@ export type AdminSpa = {
   state: string | null;
   status: SpaStatus;
   is_featured: boolean;
+  business_email: string | null;
+  business_website: string | null;
+  business_phone: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
+  twitter_url: string | null;
+  youtube_url: string | null;
+  day_pass_offered: boolean;
+  day_pass_price: string | null;
+  listing_categories: string[];
   summary: string | null;
   description: string | null;
   amenities: string[];
@@ -24,6 +35,17 @@ type SpaPayload = {
   summary?: string | null;
   description?: string | null;
   is_featured?: boolean;
+  business_email?: string | null;
+  business_website?: string | null;
+  business_phone?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  tiktok_url?: string | null;
+  twitter_url?: string | null;
+  youtube_url?: string | null;
+  day_pass_offered?: boolean;
+  day_pass_price?: string | null;
+  listing_categories?: string[];
   amenities?: string[];
 };
 
@@ -33,6 +55,17 @@ const OPTIONAL_COLUMNS = [
   "summary",
   "description",
   "is_featured",
+  "business_email",
+  "business_website",
+  "business_phone",
+  "facebook_url",
+  "instagram_url",
+  "tiktok_url",
+  "twitter_url",
+  "youtube_url",
+  "day_pass_offered",
+  "day_pass_price",
+  "listing_categories",
   "amenities",
 ] as const;
 
@@ -60,6 +93,13 @@ function extractMissingOptionalColumn(message: string, columns: readonly string[
 }
 
 function normalizeAmenities(values: FormDataEntryValue[]) {
+  return values
+    .filter((value): value is string => typeof value === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeMultiValue(values: FormDataEntryValue[]) {
   return values
     .filter((value): value is string => typeof value === "string")
     .map((item) => item.trim())
@@ -140,6 +180,41 @@ function applyMissingColumnDefaults(
     is_featured: missingColumns.includes("is_featured")
       ? false
       : Boolean(row.is_featured),
+    business_email: missingColumns.includes("business_email")
+      ? null
+      : ((row.business_email as string | null | undefined) ?? null),
+    business_website: missingColumns.includes("business_website")
+      ? null
+      : ((row.business_website as string | null | undefined) ?? null),
+    business_phone: missingColumns.includes("business_phone")
+      ? null
+      : ((row.business_phone as string | null | undefined) ?? null),
+    facebook_url: missingColumns.includes("facebook_url")
+      ? null
+      : ((row.facebook_url as string | null | undefined) ?? null),
+    instagram_url: missingColumns.includes("instagram_url")
+      ? null
+      : ((row.instagram_url as string | null | undefined) ?? null),
+    tiktok_url: missingColumns.includes("tiktok_url")
+      ? null
+      : ((row.tiktok_url as string | null | undefined) ?? null),
+    twitter_url: missingColumns.includes("twitter_url")
+      ? null
+      : ((row.twitter_url as string | null | undefined) ?? null),
+    youtube_url: missingColumns.includes("youtube_url")
+      ? null
+      : ((row.youtube_url as string | null | undefined) ?? null),
+    day_pass_offered: missingColumns.includes("day_pass_offered")
+      ? false
+      : Boolean(row.day_pass_offered),
+    day_pass_price: missingColumns.includes("day_pass_price")
+      ? null
+      : ((row.day_pass_price as string | null | undefined) ?? null),
+    listing_categories: missingColumns.includes("listing_categories")
+      ? []
+      : Array.isArray(row.listing_categories)
+        ? row.listing_categories.map((value) => String(value))
+        : [],
     amenities: missingColumns.includes("amenities")
       ? []
       : Array.isArray(row.amenities)
@@ -209,6 +284,17 @@ function buildSpaPayload(formData: FormData): SpaPayload {
     summary: emptyToNull(formData.get("summary")),
     description: emptyToNull(formData.get("description")),
     is_featured: formData.get("is_featured") === "on",
+    business_email: emptyToNull(formData.get("business_email")),
+    business_website: emptyToNull(formData.get("business_website")),
+    business_phone: emptyToNull(formData.get("business_phone")),
+    facebook_url: emptyToNull(formData.get("facebook_url")),
+    instagram_url: emptyToNull(formData.get("instagram_url")),
+    tiktok_url: emptyToNull(formData.get("tiktok_url")),
+    twitter_url: emptyToNull(formData.get("twitter_url")),
+    youtube_url: emptyToNull(formData.get("youtube_url")),
+    day_pass_offered: formData.get("day_pass_offered") === "yes",
+    day_pass_price: emptyToNull(formData.get("day_pass_price")),
+    listing_categories: normalizeMultiValue(formData.getAll("listing_categories")),
     amenities: normalizeAmenities(formData.getAll("amenities")),
   };
 }
@@ -224,6 +310,17 @@ async function writeSpaWithFallback(
     "summary",
     "description",
     "is_featured",
+    "business_email",
+    "business_website",
+    "business_phone",
+    "facebook_url",
+    "instagram_url",
+    "tiktok_url",
+    "twitter_url",
+    "youtube_url",
+    "day_pass_offered",
+    "day_pass_price",
+    "listing_categories",
     "amenities",
   ];
 
