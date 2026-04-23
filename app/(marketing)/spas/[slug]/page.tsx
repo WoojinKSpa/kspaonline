@@ -49,9 +49,7 @@ async function getPublishedSpaBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("spas")
-    .select(
-      "slug, name, city, state, address_line_1, address_line_2, postal_code, website, phone, email, summary, description, hours_text, pricing_text, what_to_know, important_notes, google_review_url, yelp_review_url"
-    )
+    .select("slug, name, city, state, summary, description")
     .eq("status", "published")
     .eq("slug", slug)
     .maybeSingle();
@@ -60,7 +58,70 @@ async function getPublishedSpaBySlug(slug: string) {
     throw new Error(`Failed to load spa: ${error.message}`);
   }
 
-  return (data as PublicSpa | null) ?? null;
+  const spa = data as Partial<PublicSpa> | null;
+
+  if (!spa) {
+    return null;
+  }
+
+  const optionalFields = [
+    "address_line_1",
+    "address_line_2",
+    "postal_code",
+    "website",
+    "phone",
+    "email",
+    "hours_text",
+    "pricing_text",
+    "what_to_know",
+    "important_notes",
+    "google_review_url",
+    "yelp_review_url",
+  ] as const;
+
+  const optionalFieldResults = await Promise.all(
+    optionalFields.map(async (field) => {
+      const result = await supabase
+        .from("spas")
+        .select(field)
+        .eq("status", "published")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (result.error) {
+        if (result.error.message.includes(field)) {
+          return [field, null] as const;
+        }
+
+        throw new Error(`Failed to load spa: ${result.error.message}`);
+      }
+
+      return [field, (result.data?.[field] as string | null | undefined) ?? null] as const;
+    })
+  );
+
+  const optionalData = Object.fromEntries(optionalFieldResults);
+
+  return {
+    slug: spa.slug ?? slug,
+    name: spa.name ?? "Untitled spa",
+    city: spa.city ?? null,
+    state: spa.state ?? null,
+    summary: spa.summary ?? null,
+    description: spa.description ?? null,
+    address_line_1: optionalData.address_line_1 ?? null,
+    address_line_2: optionalData.address_line_2 ?? null,
+    postal_code: optionalData.postal_code ?? null,
+    website: optionalData.website ?? null,
+    phone: optionalData.phone ?? null,
+    email: optionalData.email ?? null,
+    hours_text: optionalData.hours_text ?? null,
+    pricing_text: optionalData.pricing_text ?? null,
+    what_to_know: optionalData.what_to_know ?? null,
+    important_notes: optionalData.important_notes ?? null,
+    google_review_url: optionalData.google_review_url ?? null,
+    yelp_review_url: optionalData.yelp_review_url ?? null,
+  } satisfies PublicSpa;
 }
 
 function joinParts(parts: Array<string | null | undefined>) {
