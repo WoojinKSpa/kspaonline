@@ -1,6 +1,6 @@
 import {
   deleteSpaImageAction,
-  moveSpaImageAction,
+  reorderSpaImageAction,
   setFeaturedSpaImageAction,
   updateSpaAction,
   uploadSpaGalleryImagesAction,
@@ -50,7 +50,7 @@ export default async function AdminSpaEditPage({
         logoAction={uploadSpaLogoAction.bind(null, spa.id, spa.slug)}
         galleryAction={uploadSpaGalleryImagesAction.bind(null, spa.id, spa.slug)}
         setFeaturedAction={setFeaturedSpaImageAction.bind(null, spa.id, spa.slug)}
-        moveImageAction={moveSpaImageAction.bind(null, spa.id, spa.slug)}
+        reorderImageAction={reorderSpaImageAction.bind(null, spa.id, spa.slug)}
         deleteImageAction={deleteSpaImageAction.bind(null, spa.id, spa.slug)}
         images={images}
       />

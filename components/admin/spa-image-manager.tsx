@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { ArrowDown, ArrowUp, ImagePlus, Images, Star, Trash2 } from "lucide-react";
+import { ImagePlus, Images, X } from "lucide-react";
 
 import { MAX_GALLERY_IMAGE_COUNT, type SpaImage } from "@/lib/spa-images";
 
+import { GalleryImageGrid } from "@/components/admin/gallery-image-grid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +18,7 @@ type SpaImageManagerProps = {
   logoAction: (formData: FormData) => void | Promise<void>;
   galleryAction: (formData: FormData) => void | Promise<void>;
   setFeaturedAction: (formData: FormData) => void | Promise<void>;
-  moveImageAction: (formData: FormData) => void | Promise<void>;
+  reorderImageAction: (formData: FormData) => void | Promise<void>;
   deleteImageAction: (formData: FormData) => void | Promise<void>;
   images: SpaImage[];
 };
@@ -26,7 +27,7 @@ export function SpaImageManager({
   logoAction,
   galleryAction,
   setFeaturedAction,
-  moveImageAction,
+  reorderImageAction,
   deleteImageAction,
   images,
 }: SpaImageManagerProps) {
@@ -47,17 +48,21 @@ export function SpaImageManager({
         <CardContent className="grid gap-4">
           {logo ? (
             <div className="overflow-hidden rounded-3xl border border-border bg-secondary/30 p-3">
-              <img
-                src={logo.public_url}
-                alt="Business logo"
-                className="h-40 w-full rounded-2xl object-cover"
-              />
-              <div className="mt-3 flex justify-end">
-                <form action={deleteImageAction}>
+              <div className="relative">
+                <img
+                  src={logo.public_url}
+                  alt="Business logo"
+                  className="h-40 w-full rounded-2xl object-cover"
+                />
+                <form action={deleteImageAction} className="absolute right-2 top-2">
                   <input type="hidden" name="image_id" value={logo.id} />
-                  <Button type="submit" variant="outline" size="sm">
-                    <Trash2 data-icon="inline-start" />
-                    Delete logo
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    size="sm"
+                    className="size-8 rounded-full bg-black/55 p-0 text-white hover:bg-black/75"
+                  >
+                    <X className="size-4" />
                   </Button>
                 </form>
               </div>
@@ -121,90 +126,12 @@ export function SpaImageManager({
           </form>
 
           {galleryImages.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={image.id}
-                  className="overflow-hidden rounded-3xl border border-border bg-background p-3"
-                >
-                  <img
-                    src={image.public_url}
-                    alt={index === 0 ? "Featured business photo" : `Business photo ${index + 1}`}
-                    className="h-32 w-full rounded-2xl object-cover"
-                  />
-                  <div className="mt-3 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">
-                        {index === 0 ? "Featured image" : `Photo ${index + 1}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Position {index + 1} of {galleryImages.length}
-                      </p>
-                    </div>
-                    <div className="shrink-0">
-                      {index === 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-                          <Star className="size-3.5" />
-                          Featured
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {index > 0 ? (
-                      <form action={setFeaturedAction}>
-                        <input type="hidden" name="image_id" value={image.id} />
-                        <Button type="submit" variant="outline" size="sm" className="h-8 px-3">
-                          <Star data-icon="inline-start" />
-                          Feature
-                        </Button>
-                      </form>
-                    ) : null}
-                    <form action={moveImageAction}>
-                      <input type="hidden" name="image_id" value={image.id} />
-                      <input type="hidden" name="direction" value="up" />
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        size="sm"
-                        disabled={index === 0}
-                        className="h-8 px-3"
-                      >
-                        <ArrowUp data-icon="inline-start" />
-                        Up
-                      </Button>
-                    </form>
-                    <form action={moveImageAction}>
-                      <input type="hidden" name="image_id" value={image.id} />
-                      <input type="hidden" name="direction" value="down" />
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        size="sm"
-                        disabled={index === galleryImages.length - 1}
-                        className="h-8 px-3"
-                      >
-                        <ArrowDown data-icon="inline-start" />
-                        Down
-                      </Button>
-                    </form>
-                    <form action={deleteImageAction}>
-                      <input type="hidden" name="image_id" value={image.id} />
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-destructive hover:bg-destructive/5 hover:text-destructive"
-                      >
-                        <Trash2 data-icon="inline-start" />
-                        Delete
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <GalleryImageGrid
+              images={galleryImages}
+              setFeaturedAction={setFeaturedAction}
+              reorderAction={reorderImageAction}
+              deleteAction={deleteImageAction}
+            />
           ) : (
             <div className="rounded-3xl border border-dashed border-border bg-secondary/20 px-4 py-10 text-center text-sm text-muted-foreground">
               No business photos uploaded yet.

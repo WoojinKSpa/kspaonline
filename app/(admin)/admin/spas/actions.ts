@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { createAdminSpa, updateAdminSpa } from "@/lib/admin-spas";
 import {
   deleteSpaImage,
-  moveSpaImage,
+  reorderSpaImage,
   setFeaturedSpaImage,
   uploadSpaGalleryImages,
   uploadSpaLogo,
@@ -112,23 +112,24 @@ export async function deleteSpaImageAction(
   redirect(`/admin/spas/${id}` as Route);
 }
 
-export async function moveSpaImageAction(
+export async function reorderSpaImageAction(
   id: string,
   slug: string,
   formData: FormData
 ) {
-  const imageId = formData.get("image_id");
-  const direction = formData.get("direction");
+  const draggedImageId = formData.get("dragged_image_id");
+  const targetImageId = formData.get("target_image_id");
 
   if (
-    typeof imageId !== "string" ||
-    !imageId ||
-    (direction !== "up" && direction !== "down")
+    typeof draggedImageId !== "string" ||
+    !draggedImageId ||
+    typeof targetImageId !== "string" ||
+    !targetImageId
   ) {
     redirect(`/admin/spas/${id}` as Route);
   }
 
-  await moveSpaImage(id, imageId, direction);
+  await reorderSpaImage(id, draggedImageId, targetImageId);
 
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath(`/spas/${slug}` as Route);

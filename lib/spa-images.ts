@@ -376,19 +376,22 @@ export async function deleteSpaImage(spaId: string, imageId: string) {
   }
 }
 
-export async function moveSpaImage(spaId: string, imageId: string, direction: "up" | "down") {
+export async function reorderSpaImage(
+  spaId: string,
+  draggedImageId: string,
+  targetImageId: string
+) {
   const supabase = createSupabaseAdminClient();
   const images = await listSpaImagesBySpaId(spaId);
   const galleryImages = images.filter((image) => image.kind === "gallery");
-  const currentIndex = galleryImages.findIndex((image) => image.id === imageId);
+  const currentIndex = galleryImages.findIndex((image) => image.id === draggedImageId);
+  const targetIndex = galleryImages.findIndex((image) => image.id === targetImageId);
 
-  if (currentIndex === -1) {
+  if (currentIndex === -1 || targetIndex === -1) {
     throw new Error("Could not find that gallery image.");
   }
 
-  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-
-  if (targetIndex < 0 || targetIndex >= galleryImages.length) {
+  if (currentIndex === targetIndex) {
     return;
   }
 
