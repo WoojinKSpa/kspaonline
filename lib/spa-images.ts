@@ -301,7 +301,6 @@ export async function uploadSpaGalleryImages(spaId: string, files: File[]) {
 }
 
 export async function setFeaturedSpaImage(spaId: string, imageId: string) {
-  const supabase = createSupabaseAdminClient();
   const images = await listSpaImagesBySpaId(spaId);
   const galleryImages = images.filter((image) => image.kind === "gallery");
   const selectedImage = galleryImages.find((image) => image.id === imageId);
@@ -315,39 +314,14 @@ export async function setFeaturedSpaImage(spaId: string, imageId: string) {
     ...galleryImages.filter((image) => image.id !== imageId),
   ];
 
-  for (const [index, image] of reordered.entries()) {
-    const { error } = await supabase
-      .from("spa_images")
-      .update({ sort_order: index })
-      .eq("id", image.id)
-      .eq("spa_id", spaId);
-
-    if (error) {
-      throw new Error(`Failed to update featured image: ${error.message}`);
-    }
-  }
+  await persistGalleryOrder(spaId, reordered, "Failed to update featured image");
 }
 
 async function resequenceGalleryImages(spaId: string) {
-  const supabase = createSupabaseAdminClient();
   const images = await listSpaImagesBySpaId(spaId);
   const galleryImages = images.filter((image) => image.kind === "gallery");
 
-  for (const [index, image] of galleryImages.entries()) {
-    if (image.sort_order === index) {
-      continue;
-    }
-
-    const { error } = await supabase
-      .from("spa_images")
-      .update({ sort_order: index })
-      .eq("id", image.id)
-      .eq("spa_id", spaId);
-
-    if (error) {
-      throw new Error(`Failed to update image order: ${error.message}`);
-    }
-  }
+  await persistGalleryOrder(spaId, galleryImages, "Failed to update image order");
 }
 
 export async function deleteSpaImage(spaId: string, imageId: string) {
@@ -381,7 +355,6 @@ export async function reorderSpaImage(
   draggedImageId: string,
   targetImageId: string
 ) {
-  const supabase = createSupabaseAdminClient();
   const images = await listSpaImagesBySpaId(spaId);
   const galleryImages = images.filter((image) => image.kind === "gallery");
   const currentIndex = galleryImages.findIndex((image) => image.id === draggedImageId);
@@ -399,7 +372,29 @@ export async function reorderSpaImage(
   const [movedImage] = reordered.splice(currentIndex, 1);
   reordered.splice(targetIndex, 0, movedImage);
 
-  for (const [index, image] of reordered.entries()) {
+  await persistGalleryOrder(spaId, reordered, "Failed to move image");
+}
+
+async function persistGalleryOrder(
+  spaId: string,
+  orderedImages: SpaImage[],
+  errorPrefix: string
+) {
+  const supabase = createSupabaseAdminClient();
+
+  for (const [index, image] of orderedImages.entries()) {
+    const { error } = await supabase
+      .from("spa_images")
+      .update({ sort_order: index + orderedImages.length + 100 })
+      .eq("id", image.id)
+      .eq("spa_id", spaId);
+
+    if (error) {
+      throw new Error(`${errorPrefix}: ${error.message}`);
+    }
+  }
+
+  for (const [index, image] of orderedImages.entries()) {
     const { error } = await supabase
       .from("spa_images")
       .update({ sort_order: index })
@@ -407,7 +402,7 @@ export async function reorderSpaImage(
       .eq("spa_id", spaId);
 
     if (error) {
-      throw new Error(`Failed to move image: ${error.message}`);
+      throw new Error(`${errorPrefix}: ${error.message}`);
     }
   }
 }
