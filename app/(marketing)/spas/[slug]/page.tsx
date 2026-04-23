@@ -96,7 +96,9 @@ async function getPublishedSpaBySlug(slug: string) {
         throw new Error(`Failed to load spa: ${result.error.message}`);
       }
 
-      return [field, (result.data?.[field] as string | null | undefined) ?? null] as const;
+      const row = (result.data ?? null) as Record<string, string | null> | null;
+
+      return [field, row?.[field] ?? null] as const;
     })
   );
 
