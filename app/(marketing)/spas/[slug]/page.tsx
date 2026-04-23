@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
@@ -17,6 +18,7 @@ import {
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { listSpaImagesBySpaId } from "@/lib/spa-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const AMENITY_OPTIONS = [
@@ -52,6 +54,7 @@ type SpaDetailPageProps = {
 };
 
 type PublicSpa = {
+  id: string;
   slug: string;
   name: string;
   city: string | null;
@@ -88,7 +91,7 @@ async function getPublishedSpaBySlug(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("spas")
-    .select("slug, name, city, state")
+    .select("id, slug, name, city, state")
     .eq("status", "published")
     .eq("slug", slug)
     .maybeSingle();
@@ -172,6 +175,7 @@ async function getPublishedSpaBySlug(slug: string) {
     typeof value === "boolean" ? value : Boolean(value);
 
   return {
+    id: String(spa.id ?? ""),
     slug: spa.slug ?? slug,
     name: spa.name ?? "Untitled spa",
     city: spa.city ?? null,
@@ -287,6 +291,11 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
   const enabledAmenities = new Set(spa.amenities);
   const primaryCategory = spa.listing_categories[0] ?? null;
   const secondaryCategories = spa.listing_categories.slice(1);
+  const images = spa.id ? await listSpaImagesBySpaId(spa.id) : [];
+  const logoImage = images.find((image) => image.kind === "logo") ?? null;
+  const galleryImages = images.filter((image) => image.kind === "gallery");
+  const featuredImage = galleryImages[0] ?? null;
+  const galleryGridImages = galleryImages.slice(1, 5);
 
   return (
     <Container className="py-16">
@@ -298,69 +307,91 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         Back to spas
       </Link>
 
+      {featuredImage ? (
+        <Card className="mt-8 overflow-hidden">
+          <img
+            src={featuredImage.public_url}
+            alt={`${spa.name} featured photo`}
+            className="h-[300px] w-full object-cover md:h-[420px]"
+          />
+        </Card>
+      ) : null}
+
       <div className="mt-8 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="grid gap-4">
           <Card>
             <CardContent className="p-6">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
-                  {primaryCategory ? (
-                    <Badge className="bg-primary text-primary-foreground hover:bg-primary">
-                      {primaryCategory}
-                    </Badge>
-                  ) : null}
-                </div>
-                {fullAddress ? (
-                  <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
-                ) : location ? (
-                  <p className="mt-3 text-base text-muted-foreground">{location}</p>
-                ) : null}
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                  {website ? (
-                    <a
-                      href={website}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 hover:text-foreground"
-                    >
-                      <Globe className="size-4" />
-                      Website
-                    </a>
-                  ) : null}
-                  {email ? (
-                    <a
-                      href={`mailto:${email}`}
-                      className="inline-flex items-center gap-2 hover:text-foreground"
-                    >
-                      <Mail className="size-4" />
-                      Email
-                    </a>
-                  ) : null}
-                  {phone ? (
-                    <a
-                      href={`tel:${phone}`}
-                      className="inline-flex items-center gap-2 hover:text-foreground"
-                    >
-                      <Phone className="size-4" />
-                      Phone
-                    </a>
-                  ) : null}
-                </div>
-                {spa.summary ? (
-                  <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
-                    {spa.summary}
-                  </p>
-                ) : null}
-                {secondaryCategories.length > 0 ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {secondaryCategories.map((category) => (
-                      <Badge key={category} variant="outline">
-                        {category}
-                      </Badge>
-                    ))}
+              <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-start">
+                {logoImage ? (
+                  <div className="overflow-hidden rounded-3xl border border-border bg-secondary/30 p-3">
+                    <img
+                      src={logoImage.public_url}
+                      alt={`${spa.name} logo`}
+                      className="h-24 w-24 rounded-2xl object-cover md:h-28 md:w-28"
+                    />
                   </div>
                 ) : null}
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="text-4xl font-semibold leading-tight">{spa.name}</h1>
+                    {primaryCategory ? (
+                      <Badge className="bg-primary text-primary-foreground hover:bg-primary">
+                        {primaryCategory}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {fullAddress ? (
+                    <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
+                  ) : location ? (
+                    <p className="mt-3 text-base text-muted-foreground">{location}</p>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                    {website ? (
+                      <a
+                        href={website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 hover:text-foreground"
+                      >
+                        <Globe className="size-4" />
+                        Website
+                      </a>
+                    ) : null}
+                    {email ? (
+                      <a
+                        href={`mailto:${email}`}
+                        className="inline-flex items-center gap-2 hover:text-foreground"
+                      >
+                        <Mail className="size-4" />
+                        Email
+                      </a>
+                    ) : null}
+                    {phone ? (
+                      <a
+                        href={`tel:${phone}`}
+                        className="inline-flex items-center gap-2 hover:text-foreground"
+                      >
+                        <Phone className="size-4" />
+                        Phone
+                      </a>
+                    ) : null}
+                  </div>
+                  {spa.summary ? (
+                    <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                      {spa.summary}
+                    </p>
+                  ) : null}
+                  {secondaryCategories.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {secondaryCategories.map((category) => (
+                        <Badge key={category} variant="outline">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -474,6 +505,28 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
               })}
             </CardContent>
           </Card>
+
+          {galleryGridImages.length > 0 ? (
+            <Card className="rounded-[24px] shadow-none">
+              <CardHeader>
+                <CardTitle>Gallery</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 pt-0 sm:grid-cols-2">
+                {galleryGridImages.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="overflow-hidden rounded-2xl border border-border bg-secondary/20"
+                  >
+                    <img
+                      src={image.public_url}
+                      alt={`${spa.name} gallery photo ${index + 2}`}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </aside>
       </div>
     </Container>

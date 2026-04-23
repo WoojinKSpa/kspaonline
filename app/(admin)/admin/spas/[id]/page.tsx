@@ -1,9 +1,15 @@
-import { updateSpaAction } from "@/app/(admin)/admin/spas/actions";
+import {
+  updateSpaAction,
+  uploadSpaGalleryImagesAction,
+  uploadSpaLogoAction,
+} from "@/app/(admin)/admin/spas/actions";
 import { notFound } from "next/navigation";
 
 import { SpaEditorForm } from "@/components/admin/spa-editor-form";
+import { SpaImageManager } from "@/components/admin/spa-image-manager";
 import { PageIntro } from "@/components/layout/page-intro";
 import { getAdminSpaById } from "@/lib/admin-spas";
+import { listSpaImagesBySpaId } from "@/lib/spa-images";
 
 type AdminSpaEditPageProps = {
   params: Promise<{ id: string }>;
@@ -28,12 +34,19 @@ export default async function AdminSpaEditPage({
     notFound();
   }
 
+  const images = await listSpaImagesBySpaId(spa.id);
+
   return (
     <div className="flex flex-col gap-8">
       <PageIntro
         eyebrow="Admin"
         title={`Edit ${spa.name}`}
         description="Update a spa listing with server-side admin actions."
+      />
+      <SpaImageManager
+        logoAction={uploadSpaLogoAction.bind(null, spa.id, spa.slug)}
+        galleryAction={uploadSpaGalleryImagesAction.bind(null, spa.id, spa.slug)}
+        images={images}
       />
       <SpaEditorForm
         formAction={updateSpaAction.bind(null, id)}
