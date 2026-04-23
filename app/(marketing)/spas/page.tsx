@@ -22,11 +22,20 @@ export default async function SpasPage() {
   noStore();
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const baseQuery = supabase
     .from("spas")
     .select("id, name, city, state, summary")
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .eq("status", "published");
+
+  let { data, error } = await baseQuery.order("created_at", { ascending: false });
+
+  // Keep the preferred ordering when the schema supports it, but fall back
+  // gracefully for older tables that have not added created_at yet.
+  if (error?.message.includes("created_at")) {
+    const fallbackResult = await baseQuery.order("id", { ascending: false });
+    data = fallbackResult.data;
+    error = fallbackResult.error;
+  }
 
   if (error) {
     throw new Error(`Failed to load spas: ${error.message}`);
