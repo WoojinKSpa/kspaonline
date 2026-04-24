@@ -60,9 +60,10 @@ export default async function AdminSpaEditPage({
         defaultValues={{
           name: spa.name,
           slug: spa.slug,
+          address_line_1: spa.address_line_1,
           city: spa.city,
           state: spa.state,
-          address_line_1: spa.address_line_1,
+          postal_code: spa.postal_code,
           status: spa.status,
           is_featured: spa.is_featured,
           business_email: spa.business_email,

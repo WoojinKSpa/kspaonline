@@ -27,9 +27,10 @@ type SpaEditorFormProps = {
   defaultValues?: {
     name?: string;
     slug?: string;
+    address_line_1?: string | null;
     city?: string;
     state?: string | null;
-    address_line_1?: string | null;
+    postal_code?: string | null;
     status?: SpaStatus;
     is_featured?: boolean;
     business_email?: string | null;
@@ -79,6 +80,15 @@ export function SpaEditorForm({
             <Input id="slug" name="slug" defaultValue={defaultValues?.slug} />
           </div>
           <div className="flex flex-col gap-2">
+            <Label htmlFor="address_line_1">Address</Label>
+            <Input
+              id="address_line_1"
+              name="address_line_1"
+              defaultValue={defaultValues?.address_line_1 ?? ""}
+              placeholder="123 Main St"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="city">City</Label>
             <Input id="city" name="city" defaultValue={defaultValues?.city} required />
           </div>
@@ -86,13 +96,13 @@ export function SpaEditorForm({
             <Label htmlFor="state">State</Label>
             <Input id="state" name="state" defaultValue={defaultValues?.state ?? ""} />
           </div>
-          <div className="flex flex-col gap-2 md:col-span-2">
-            <Label htmlFor="address_line_1">Address</Label>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="postal_code">ZIP</Label>
             <Input
-              id="address_line_1"
-              name="address_line_1"
-              defaultValue={defaultValues?.address_line_1 ?? ""}
-              placeholder="123 Main St"
+              id="postal_code"
+              name="postal_code"
+              defaultValue={defaultValues?.postal_code ?? ""}
+              placeholder="94306"
             />
           </div>
           <div className="flex flex-col gap-2">

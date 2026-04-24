@@ -7,9 +7,10 @@ export type AdminSpa = {
   id: string;
   name: string;
   slug: string;
+  address_line_1: string | null;
   city: string;
   state: string | null;
-  address_line_1: string | null;
+  postal_code: string | null;
   status: SpaStatus;
   is_featured: boolean;
   business_email: string | null;
@@ -31,10 +32,11 @@ export type AdminSpa = {
 type SpaPayload = {
   name: string;
   slug: string;
+  address_line_1?: string | null;
   city: string;
   status: SpaStatus;
   state?: string | null;
-  address_line_1?: string | null;
+  postal_code?: string | null;
   summary?: string | null;
   description?: string | null;
   is_featured?: boolean;
@@ -54,8 +56,9 @@ type SpaPayload = {
 
 const REQUIRED_LIST_COLUMNS = ["id", "name", "slug", "city", "status"] as const;
 const OPTIONAL_COLUMNS = [
-  "state",
   "address_line_1",
+  "state",
+  "postal_code",
   "summary",
   "description",
   "is_featured",
@@ -174,12 +177,15 @@ function applyMissingColumnDefaults(
     id: String(row.id),
     name: String(row.name ?? ""),
     slug: String(row.slug ?? ""),
-    city: String(row.city ?? ""),
-    status: (row.status as SpaStatus | undefined) ?? "draft",
-    state: missingColumns.includes("state") ? null : ((row.state as string | null | undefined) ?? null),
     address_line_1: missingColumns.includes("address_line_1")
       ? null
       : ((row.address_line_1 as string | null | undefined) ?? null),
+    city: String(row.city ?? ""),
+    status: (row.status as SpaStatus | undefined) ?? "draft",
+    state: missingColumns.includes("state") ? null : ((row.state as string | null | undefined) ?? null),
+    postal_code: missingColumns.includes("postal_code")
+      ? null
+      : ((row.postal_code as string | null | undefined) ?? null),
     summary: missingColumns.includes("summary")
       ? null
       : ((row.summary as string | null | undefined) ?? null),
@@ -287,10 +293,11 @@ function buildSpaPayload(formData: FormData): SpaPayload {
   return {
     name,
     slug,
+    address_line_1: emptyToNull(formData.get("address_line_1")),
     city,
     status,
     state: emptyToNull(formData.get("state")),
-    address_line_1: emptyToNull(formData.get("address_line_1")),
+    postal_code: emptyToNull(formData.get("postal_code")),
     summary: emptyToNull(formData.get("summary")),
     description: emptyToNull(formData.get("description")),
     is_featured: formData.get("is_featured") === "on",
@@ -316,8 +323,9 @@ async function writeSpaWithFallback(
 ): Promise<{ id: string }> {
   const supabase = createSupabaseAdminClient();
   const optionalKeys: OptionalColumn[] = [
-    "state",
     "address_line_1",
+    "state",
+    "postal_code",
     "summary",
     "description",
     "is_featured",
