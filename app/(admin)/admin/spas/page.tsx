@@ -2,6 +2,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { deleteSpaAction } from "@/app/(admin)/admin/spas/actions";
+import { DeleteSpaButton } from "@/components/admin/delete-spa-button";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,12 +75,20 @@ export default async function AdminSpaListPage() {
                     )}
                   </td>
                   <td className="px-2 py-4">
+                    <div className="flex flex-wrap items-center gap-3">
                     <Link
                       className="font-medium text-primary"
                       href={`/admin/spas/${spa.id}` as Route}
                     >
                       Edit
                     </Link>
+                    <DeleteSpaButton
+                      action={deleteSpaAction}
+                      id={spa.id}
+                      name={spa.name}
+                      slug={spa.slug}
+                    />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -4,9 +4,10 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createAdminSpa, updateAdminSpa } from "@/lib/admin-spas";
+import { createAdminSpa, deleteAdminSpa, updateAdminSpa } from "@/lib/admin-spas";
 import {
   deleteSpaImage,
+  deleteSpaImagesForSpa,
   reorderSpaImage,
   setFeaturedSpaImage,
   uploadSpaGalleryImages,
@@ -30,6 +31,28 @@ export async function updateSpaAction(id: string, formData: FormData) {
   revalidatePath("/admin/spas" as Route);
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath("/spas" as Route);
+
+  redirect("/admin/spas" as Route);
+}
+
+export async function deleteSpaAction(formData: FormData) {
+  const id = formData.get("id");
+  const slug = formData.get("slug");
+
+  if (typeof id !== "string" || !id) {
+    redirect("/admin/spas" as Route);
+  }
+
+  await deleteSpaImagesForSpa(id);
+  await deleteAdminSpa(id);
+
+  revalidatePath("/admin" as Route);
+  revalidatePath("/admin/spas" as Route);
+  revalidatePath("/spas" as Route);
+
+  if (typeof slug === "string" && slug) {
+    revalidatePath(`/spas/${slug}` as Route);
+  }
 
   redirect("/admin/spas" as Route);
 }

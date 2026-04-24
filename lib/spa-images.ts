@@ -350,6 +350,28 @@ export async function deleteSpaImage(spaId: string, imageId: string) {
   }
 }
 
+export async function deleteSpaImagesForSpa(spaId: string) {
+  const supabase = createSupabaseAdminClient();
+  const images = await listSpaImagesBySpaId(spaId);
+  const storagePaths = images.map((image) => image.storage_path);
+
+  if (storagePaths.length > 0) {
+    const { error } = await supabase.storage
+      .from(SPA_IMAGE_BUCKET)
+      .remove(storagePaths);
+
+    if (error) {
+      throw new Error(`Failed to remove spa images: ${error.message}`);
+    }
+  }
+
+  const { error } = await supabase.from("spa_images").delete().eq("spa_id", spaId);
+
+  if (error && !isMissingSchemaError(error.message)) {
+    throw new Error(`Failed to delete spa image records: ${error.message}`);
+  }
+}
+
 export async function reorderSpaImage(
   spaId: string,
   draggedImageId: string,

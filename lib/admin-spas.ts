@@ -466,3 +466,12 @@ export async function updateAdminSpa(id: string, formData: FormData) {
   const payload = buildSpaPayload(formData);
   return writeSpaWithFallback("update", payload, id);
 }
+
+export async function deleteAdminSpa(id: string) {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from("spas").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(`Failed to delete spa: ${error.message}`);
+  }
+}
