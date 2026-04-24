@@ -5,6 +5,7 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -15,6 +16,7 @@ type PublishedSpa = {
   city: string;
   state: string | null;
   summary: string | null;
+  listing_categories: string[] | null;
 };
 
 export const metadata = {
@@ -28,7 +30,7 @@ export default async function SpasPage() {
   const queryPublishedSpas = (orderBy: "created_at" | "id") =>
     supabase
       .from("spas")
-      .select("id, slug, name, city, state, summary")
+      .select("id, slug, name, city, state, summary, listing_categories")
       .eq("status", "published")
       .order(orderBy, { ascending: false });
 
@@ -70,8 +72,19 @@ export default async function SpasPage() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Published spa</p>
-                    <CardTitle className="mt-2 text-xl">{spa.name}</CardTitle>
+                    {spa.listing_categories?.[0] ? (
+                      <Badge variant="secondary" className="rounded-full">
+                        {spa.listing_categories[0]}
+                      </Badge>
+                    ) : null}
+                    <CardTitle className="mt-2 text-xl">
+                      <Link
+                        href={`/spas/${spa.slug}` as Route}
+                        className="hover:underline"
+                      >
+                        {spa.name}
+                      </Link>
+                    </CardTitle>
                   </div>
                   <div className="rounded-full bg-secondary p-3">
                     <MapPin className="size-4 text-primary" />
