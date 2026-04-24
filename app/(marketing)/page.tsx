@@ -1,13 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import {
-  ArrowRight,
-  ExternalLink,
-  MapPin,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, ExternalLink, MapPin, Search } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
@@ -224,34 +218,20 @@ export default async function HomePage() {
           </div>
 
           <div className="surface p-6 shadow-[0_24px_80px_-44px_rgba(53,37,21,0.45)] sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-                  Why Kspa.online
-                </p>
-                <h2 className="mt-3 text-2xl font-semibold">
-                  A calmer way to discover Korean spas
-                </h2>
-              </div>
-              <div className="rounded-full bg-secondary p-3 text-primary">
-                <Sparkles className="size-5" />
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-4">
-              {[
-                "Browse real spa listings with location and directory details in one place.",
-                "See amenities, pricing clues, and first-timer guidance before you visit.",
-                "Help spa owners keep details current so guests can discover them with confidence.",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[24px] border border-border bg-background/80 px-5 py-4"
-                >
-                  <p className="text-sm leading-6 text-muted-foreground">{item}</p>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+              First-Timer Guide
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold">New to Korean Spas?</h2>
+            <p className="mt-5 text-base leading-7 text-muted-foreground">
+              Kspa.online helps visitors understand amenities, etiquette,
+              pricing, and what to expect so their first visit feels easier,
+              calmer, and more informed.
+            </p>
+            <Button asChild variant="outline" size="lg" className="mt-8">
+              <Link href="/guides/first-time-korean-spa">
+                Read the first-timer guide
+              </Link>
+            </Button>
           </div>
         </Container>
       </section>
@@ -346,24 +326,7 @@ export default async function HomePage() {
             )}
           </div>
 
-          <div className="grid gap-6">
-            <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
-              <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-                First-Timer Guide
-              </p>
-              <h3 className="mt-3 text-3xl font-semibold">New to Korean Spas?</h3>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Kspa.online helps visitors understand amenities, etiquette,
-                pricing, and what to expect so their first visit feels easier,
-                calmer, and more informed.
-              </p>
-              <Button asChild variant="outline" size="lg" className="mt-6">
-                <Link href="/guides/first-time-korean-spa">
-                  Read the first-timer guide
-                </Link>
-              </Button>
-            </div>
-
+          <div>
             <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
               <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
                 Owners
