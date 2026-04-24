@@ -21,32 +21,70 @@ type FeaturedSpa = {
   city: string;
   state: string | null;
   summary: string | null;
+  listing_categories: string[];
 };
 
 async function getFeaturedSpas() {
   const supabase = await createSupabaseServerClient();
-  const queryFeaturedSpas = (orderBy: "created_at" | "id") =>
+  const queryFeaturedSpas = (
+    orderBy: "created_at" | "id",
+    includeCategories = true
+  ) =>
     supabase
       .from("spas")
-      .select("id, slug, name, city, state, summary")
+      .select(
+        includeCategories
+          ? "id, slug, name, city, state, summary, listing_categories"
+          : "id, slug, name, city, state, summary"
+      )
       .eq("status", "published")
       .eq("is_featured", true)
       .limit(6)
       .order(orderBy, { ascending: false });
 
-  let { data, error } = await queryFeaturedSpas("created_at");
+  const attempts: Array<{ orderBy: "created_at" | "id"; includeCategories: boolean }> = [
+    { orderBy: "created_at", includeCategories: true },
+    { orderBy: "created_at", includeCategories: false },
+    { orderBy: "id", includeCategories: true },
+    { orderBy: "id", includeCategories: false },
+  ];
 
-  if (error?.message.includes("created_at")) {
-    const fallbackResult = await queryFeaturedSpas("id");
-    data = fallbackResult.data;
-    error = fallbackResult.error;
+  let data: Awaited<ReturnType<typeof queryFeaturedSpas>>["data"] = null;
+  let error: Awaited<ReturnType<typeof queryFeaturedSpas>>["error"] = null;
+
+  for (const attempt of attempts) {
+    const result = await queryFeaturedSpas(attempt.orderBy, attempt.includeCategories);
+    data = result.data;
+    error = result.error;
+
+    if (!error) {
+      break;
+    }
+
+    const message = error.message;
+    const missingCategories = message.includes("listing_categories");
+    const missingCreatedAt = message.includes("created_at");
+
+    if (
+      (attempt.includeCategories && missingCategories) ||
+      (attempt.orderBy === "created_at" && missingCreatedAt)
+    ) {
+      continue;
+    }
+
+    break;
   }
 
   if (error) {
     throw new Error(`Failed to load featured spas: ${error.message}`);
   }
 
-  return (data ?? []) as FeaturedSpa[];
+  return (data ?? []).map((spa) => ({
+    ...spa,
+    listing_categories: Array.isArray(spa.listing_categories)
+      ? spa.listing_categories.map((value) => String(value))
+      : [],
+  })) as FeaturedSpa[];
 }
 
 async function getPublishedStates() {
@@ -219,18 +257,24 @@ export default async function HomePage() {
           ) : (
             <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {featuredSpas.map((spa) => (
-                <Link
+                <div
                   key={spa.id}
-                  href={`/spas/${spa.slug}` as Route}
                   className="surface group flex h-full flex-col p-6 shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
-                        Featured listing
-                      </p>
+                      {spa.listing_categories[0] ? (
+                        <p className="inline-flex rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
+                          {spa.listing_categories[0]}
+                        </p>
+                      ) : null}
                       <h3 className="mt-3 text-2xl font-semibold leading-tight">
-                        {spa.name}
+                        <Link
+                          href={`/spas/${spa.slug}` as Route}
+                          className="transition-colors hover:text-primary"
+                        >
+                          {spa.name}
+                        </Link>
                       </h3>
                     </div>
                     <div className="rounded-full bg-secondary p-3 text-primary">
@@ -243,11 +287,14 @@ export default async function HomePage() {
                   <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
                     {spa.summary || "Published listing. Details will expand as more information is added."}
                   </p>
-                  <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                    View spa
+                  <Link
+                    href={`/spas/${spa.slug}` as Route}
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    View details
                     <ExternalLink className="size-4 transition-transform group-hover:translate-x-0.5" />
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           )}
