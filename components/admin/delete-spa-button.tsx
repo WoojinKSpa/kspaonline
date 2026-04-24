@@ -27,10 +27,11 @@ export function DeleteSpaButton({ action, id, name, slug }: DeleteSpaButtonProps
         type="submit"
         variant="outline"
         size="sm"
-        className="border-red-200 px-3 text-red-700 hover:bg-red-50"
+        aria-label={`Delete ${name}`}
+        title={`Delete ${name}`}
+        className="size-9 border-red-200 p-0 text-red-700 hover:bg-red-50"
       >
-        <Trash2 data-icon="inline-start" className="size-4" />
-        Delete
+        <Trash2 className="size-4" />
       </Button>
     </form>
   );
