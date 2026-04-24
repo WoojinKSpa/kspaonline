@@ -26,71 +26,60 @@ type FeaturedSpa = {
 
 async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
   const supabase = await createSupabaseServerClient();
-  const queryFeaturedSpas = (
-    orderBy: "created_at" | "id",
-    includeCategories = true
-  ) =>
+  const queryFeaturedSpas = (orderBy: "created_at" | "id") =>
     supabase
       .from("spas")
-      .select(
-        includeCategories
-          ? "id, slug, name, city, state, summary, listing_categories"
-          : "id, slug, name, city, state, summary"
-      )
+      .select("id, slug, name, city, state, summary")
       .eq("status", "published")
       .eq("is_featured", true)
       .limit(6)
       .order(orderBy, { ascending: false });
 
-  const attempts: Array<{ orderBy: "created_at" | "id"; includeCategories: boolean }> = [
-    { orderBy: "created_at", includeCategories: true },
-    { orderBy: "created_at", includeCategories: false },
-    { orderBy: "id", includeCategories: true },
-    { orderBy: "id", includeCategories: false },
-  ];
-
   let data: Awaited<ReturnType<typeof queryFeaturedSpas>>["data"] = null;
   let error: Awaited<ReturnType<typeof queryFeaturedSpas>>["error"] = null;
 
-  for (const attempt of attempts) {
-    const result = await queryFeaturedSpas(attempt.orderBy, attempt.includeCategories);
-    data = result.data;
-    error = result.error;
+  const createdAtResult = await queryFeaturedSpas("created_at");
+  data = createdAtResult.data;
+  error = createdAtResult.error;
 
-    if (!error) {
-      break;
-    }
-
-    const message = error.message;
-    const missingCategories = message.includes("listing_categories");
-    const missingCreatedAt = message.includes("created_at");
-
-    if (
-      (attempt.includeCategories && missingCategories) ||
-      (attempt.orderBy === "created_at" && missingCreatedAt)
-    ) {
-      continue;
-    }
-
-    break;
+  if (error?.message.includes("created_at")) {
+    const fallbackResult = await queryFeaturedSpas("id");
+    data = fallbackResult.data;
+    error = fallbackResult.error;
   }
 
   if (error) {
     throw new Error(`Failed to load featured spas: ${error.message}`);
   }
 
-  const rows = (data ?? []) as Array<Record<string, unknown>>;
-
-  return rows.map((spa) => ({
+  const baseSpas = (data ?? []).map((spa) => ({
     id: String(spa.id),
     slug: String(spa.slug),
     name: String(spa.name),
     city: String(spa.city),
     state: typeof spa.state === "string" ? spa.state : null,
     summary: typeof spa.summary === "string" ? spa.summary : null,
-    listing_categories: Array.isArray(spa.listing_categories)
-      ? spa.listing_categories.map((value) => String(value))
-      : [],
+    listing_categories: [],
+  }));
+
+  const categorySelect: string = "id, listing_categories";
+  const { data: categoryData } = await supabase
+    .from("spas")
+    .select(categorySelect)
+    .in("id", baseSpas.map((spa) => spa.id));
+
+  const categoriesBySpaId = new Map(
+    ((categoryData ?? []) as unknown as Array<Record<string, unknown>>).map((spa) => [
+      String(spa.id),
+      Array.isArray(spa.listing_categories)
+        ? spa.listing_categories.map((value) => String(value))
+        : [],
+    ])
+  );
+
+  return baseSpas.map((spa) => ({
+    ...spa,
+    listing_categories: categoriesBySpaId.get(spa.id) ?? [],
   }));
 }
 
