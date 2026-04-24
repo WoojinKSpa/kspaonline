@@ -24,7 +24,7 @@ type FeaturedSpa = {
   listing_categories: string[];
 };
 
-async function getFeaturedSpas() {
+async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
   const supabase = await createSupabaseServerClient();
   const queryFeaturedSpas = (
     orderBy: "created_at" | "id",
@@ -79,7 +79,9 @@ async function getFeaturedSpas() {
     throw new Error(`Failed to load featured spas: ${error.message}`);
   }
 
-  return (data ?? []).map((spa) => ({
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+
+  return rows.map((spa) => ({
     id: String(spa.id),
     slug: String(spa.slug),
     name: String(spa.name),
