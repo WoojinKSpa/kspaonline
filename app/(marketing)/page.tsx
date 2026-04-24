@@ -1,145 +1,323 @@
+import type { Route } from "next";
 import Link from "next/link";
-import { ArrowRight, MapPin, Sparkles, Waves } from "lucide-react";
+import { unstable_noStore as noStore } from "next/cache";
+import {
+  ArrowRight,
+  ExternalLink,
+  MapPin,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
 import { Container } from "@/components/layout/container";
-import { SpaCard } from "@/components/spas/spa-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { featuredSpas, marketHighlights } from "@/lib/mock-data";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+type FeaturedSpa = {
+  id: string;
+  slug: string;
+  name: string;
+  city: string;
+  state: string | null;
+  summary: string | null;
+};
+
+async function getFeaturedSpas() {
+  const supabase = await createSupabaseServerClient();
+  const queryFeaturedSpas = (orderBy: "created_at" | "id") =>
+    supabase
+      .from("spas")
+      .select("id, slug, name, city, state, summary")
+      .eq("status", "published")
+      .eq("is_featured", true)
+      .limit(6)
+      .order(orderBy, { ascending: false });
+
+  let { data, error } = await queryFeaturedSpas("created_at");
+
+  if (error?.message.includes("created_at")) {
+    const fallbackResult = await queryFeaturedSpas("id");
+    data = fallbackResult.data;
+    error = fallbackResult.error;
+  }
+
+  if (error) {
+    throw new Error(`Failed to load featured spas: ${error.message}`);
+  }
+
+  return (data ?? []) as FeaturedSpa[];
+}
+
+async function getPublishedStates() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("spas")
+    .select("state")
+    .eq("status", "published")
+    .not("state", "is", null)
+    .order("state", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load states: ${error.message}`);
+  }
+
+  return [...new Set(
+    (data ?? [])
+      .map((row) => row.state?.trim())
+      .filter((state): state is string => Boolean(state))
+  )];
+}
+
+function SectionIntro({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="max-w-2xl">
+      <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+        {eyebrow}
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">{title}</h2>
+      <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+export default async function HomePage() {
+  noStore();
+
+  const [featuredSpas, states] = await Promise.all([
+    getFeaturedSpas(),
+    getPublishedStates(),
+  ]);
+
   return (
     <div className="pb-20">
       <section className="relative overflow-hidden border-b border-white/50">
-        <div className="absolute inset-0 bg-soft-grid bg-[size:48px_48px] opacity-20" />
-        <Container className="relative grid min-h-[calc(100svh-5rem)] items-center gap-14 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-          <div className="max-w-2xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(248,220,191,0.75),_transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,255,255,0.96))]" />
+        <Container className="relative grid gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-24">
+          <div className="max-w-3xl">
             <Badge className="mb-6 bg-primary/10 text-primary hover:bg-primary/10">
-              Curated Korean spa discovery
+              Korean spa directory
             </Badge>
-            <h1 className="max-w-xl text-5xl font-semibold leading-tight sm:text-6xl">
-              Find the right jjimjilbang, sauna, or wellness retreat near you.
+            <h1 className="max-w-3xl text-5xl font-semibold leading-tight sm:text-6xl">
+              Find Korean Spas Near You
             </h1>
-            <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-              Kspa.online helps people browse Korean spas with confidence through
-              city-based discovery, amenity highlights, and a future-ready admin
-              workflow backed by Supabase.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+              Explore Korean spas, saunas, jjimjilbangs, and wellness spaces
+              across the U.S.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href="/spas">
-                  Explore spas
-                  <ArrowRight data-icon="inline-end" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/login">Admin login</Link>
-              </Button>
-            </div>
+
+            <form action="/spas" className="mt-8 max-w-2xl">
+              <div className="surface flex flex-col gap-3 p-3 shadow-[0_20px_60px_-30px_rgba(73,56,35,0.35)] sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[22px] px-3 py-3">
+                  <div className="rounded-full bg-primary/10 p-2 text-primary">
+                    <Search className="size-4" />
+                  </div>
+                  <input
+                    type="text"
+                    name="search"
+                    placeholder="Search by spa name, city, or state"
+                    className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                    readOnly
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" size="lg" className="flex-1 sm:flex-none">
+                    Browse Spas
+                    <ArrowRight data-icon="inline-end" />
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="flex-1 sm:flex-none">
+                    <Link href="/claim">Add or Claim a Listing</Link>
+                  </Button>
+                </div>
+              </div>
+            </form>
+
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              {marketHighlights.map((item) => (
+              {[
+                {
+                  label: "Live directory",
+                  value: featuredSpas.length > 0 ? `${featuredSpas.length}+` : "Growing",
+                },
+                {
+                  label: "Browse by state",
+                  value: states.length > 0 ? String(states.length) : "Soon",
+                },
+                {
+                  label: "Directory focus",
+                  value: "Korean spas",
+                },
+              ].map((stat) => (
                 <div
-                  key={item.label}
-                  className="surface p-4 shadow-soft shadow-black/5"
+                  key={stat.label}
+                  className="surface p-5 shadow-[0_16px_44px_-34px_rgba(0,0,0,0.35)]"
                 >
-                  <p className="text-2xl font-semibold">{item.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {item.label}
-                  </p>
+                  <p className="text-2xl font-semibold">{stat.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="surface relative overflow-hidden p-6 shadow-soft shadow-black/10 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/10 to-transparent" />
-            <div className="relative flex flex-col gap-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-                    Featured city
-                  </p>
-                  <h2 className="mt-2 text-2xl font-semibold">
-                    Los Angeles county
-                  </h2>
-                </div>
-                <div className="rounded-full bg-secondary p-3 text-secondary-foreground">
-                  <Waves className="size-5" />
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-[24px] border border-border bg-[radial-gradient(circle_at_top,_rgba(15,118,110,0.18),_transparent_45%),linear-gradient(135deg,#0f172a_0%,#1f2937_55%,#164e63_100%)] p-6 text-white">
-                <p className="text-sm uppercase tracking-[0.2em] text-white/70">
-                  Launch structure
+          <div className="surface p-6 shadow-[0_24px_80px_-44px_rgba(53,37,21,0.45)] sm:p-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+                  Why Kspa.online
                 </p>
-                <ul className="mt-5 flex flex-col gap-4 text-sm text-white/80">
-                  <li className="flex items-start gap-3">
-                    <Sparkles className="mt-0.5 size-4 shrink-0" />
-                    Public browsing designed for trust, clarity, and location
-                    scanning.
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <MapPin className="mt-0.5 size-4 shrink-0" />
-                    Detail pages are ready for hours, amenities, pricing, and
-                    editorial content.
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <ArrowRight className="mt-0.5 size-4 shrink-0" />
-                    Admin routes are scaffolded for future CRUD, auth guards,
-                    and moderation tools.
-                  </li>
-                </ul>
+                <h2 className="mt-3 text-2xl font-semibold">
+                  A calmer way to discover Korean spas
+                </h2>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {featuredSpas.slice(0, 2).map((spa) => (
-                  <SpaCard key={spa.id} spa={spa} compact />
-                ))}
+              <div className="rounded-full bg-secondary p-3 text-primary">
+                <Sparkles className="size-5" />
               </div>
+            </div>
+
+            <div className="mt-8 grid gap-4">
+              {[
+                "Browse real spa listings with location and directory details in one place.",
+                "See amenities, pricing clues, and first-timer guidance before you visit.",
+                "Help spa owners keep details current so guests can discover them with confidence.",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[24px] border border-border bg-background/80 px-5 py-4"
+                >
+                  <p className="text-sm leading-6 text-muted-foreground">{item}</p>
+                </div>
+              ))}
             </div>
           </div>
         </Container>
       </section>
 
       <section className="py-20">
-        <Container className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
-          <div className="max-w-md">
-            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-              Why this structure
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold">
-              A flexible foundation for discovery first, operations second.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              The public experience stays calm and editorial, while the admin
-              side uses modular building blocks that can grow into a full
-              directory workflow without a rewrite.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                title: "Directory-first data model",
-                body: "Designed for spa profiles, neighborhoods, amenities, and future moderation fields.",
-              },
-              {
-                title: "Supabase-ready backend",
-                body: "Environment helpers and auth client setup are included so data and login can be wired in cleanly.",
-              },
-              {
-                title: "shadcn-compatible UI system",
-                body: "Reusable components and design tokens make it easy to add forms, dialogs, and tables later.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="surface p-6">
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  {item.body}
-                </p>
+        <Container>
+          <SectionIntro
+            eyebrow="Featured Spas"
+            title="A curated look at standout listings"
+            description="Featured spas are published listings highlighted by owners or editors, designed to help visitors start with trusted options."
+          />
+
+          {featuredSpas.length === 0 ? (
+            <div className="surface mt-10 p-10 text-center">
+              <h3 className="text-2xl font-semibold">Featured spas coming soon.</h3>
+              <p className="mt-3 text-muted-foreground">
+                As more listings are published and curated, featured spas will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {featuredSpas.map((spa) => (
+                <Link
+                  key={spa.id}
+                  href={`/spas/${spa.slug}` as Route}
+                  className="surface group flex h-full flex-col p-6 shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
+                        Featured listing
+                      </p>
+                      <h3 className="mt-3 text-2xl font-semibold leading-tight">
+                        {spa.name}
+                      </h3>
+                    </div>
+                    <div className="rounded-full bg-secondary p-3 text-primary">
+                      <MapPin className="size-4" />
+                    </div>
+                  </div>
+                  <p className="mt-5 text-sm font-medium text-foreground">
+                    {[spa.city, spa.state].filter(Boolean).join(", ")}
+                  </p>
+                  <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
+                    {spa.summary || "Published listing. Details will expand as more information is added."}
+                  </p>
+                  <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                    View spa
+                    <ExternalLink className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Container>
+      </section>
+
+      <section className="pb-20">
+        <Container className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
+            <SectionIntro
+              eyebrow="Browse by State"
+              title="Start with the places already in the directory"
+              description="Browse state-by-state and jump into the listings that are currently live."
+            />
+
+            {states.length === 0 ? (
+              <p className="mt-8 text-sm text-muted-foreground">
+                State listings will appear here as more published spas are added.
+              </p>
+            ) : (
+              <div className="mt-8 flex flex-wrap gap-3">
+                {states.map((state) => (
+                  <Link
+                    key={state}
+                    href={{ pathname: "/spas", query: { state } }}
+                    className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30 hover:bg-secondary"
+                  >
+                    {state}
+                  </Link>
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+
+          <div className="grid gap-6">
+            <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
+              <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+                First-Timer Guide
+              </p>
+              <h3 className="mt-3 text-3xl font-semibold">New to Korean Spas?</h3>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Kspa.online helps visitors understand amenities, etiquette,
+                pricing, and what to expect so their first visit feels easier,
+                calmer, and more informed.
+              </p>
+              <Button asChild variant="outline" size="lg" className="mt-6">
+                <Link href="/guides/first-time-korean-spa">
+                  Read the first-timer guide
+                </Link>
+              </Button>
+            </div>
+
+            <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
+              <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
+                Owners
+              </p>
+              <h3 className="mt-3 text-3xl font-semibold">
+                Own or manage a Korean spa?
+              </h3>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Claim your listing, keep your details current, and help new
+                guests discover your spa.
+              </p>
+              <Button asChild size="lg" className="mt-6">
+                <Link href="/claim">Claim your listing</Link>
+              </Button>
+            </div>
           </div>
         </Container>
       </section>
     </div>
   );
 }
-
