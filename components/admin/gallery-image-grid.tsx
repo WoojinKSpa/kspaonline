@@ -60,6 +60,11 @@ export function GalleryImageGrid({
             const droppedImageId =
               event.dataTransfer.getData("text/plain") || draggedImageId;
 
+            if (!droppedImageId) {
+              setDraggedImageId(null);
+              return;
+            }
+
             void handleReorder(droppedImageId, image.id);
             setDraggedImageId(null);
           }}
