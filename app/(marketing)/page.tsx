@@ -80,11 +80,16 @@ async function getFeaturedSpas() {
   }
 
   return (data ?? []).map((spa) => ({
-    ...spa,
+    id: String(spa.id),
+    slug: String(spa.slug),
+    name: String(spa.name),
+    city: String(spa.city),
+    state: typeof spa.state === "string" ? spa.state : null,
+    summary: typeof spa.summary === "string" ? spa.summary : null,
     listing_categories: Array.isArray(spa.listing_categories)
       ? spa.listing_categories.map((value) => String(value))
       : [],
-  })) as FeaturedSpa[];
+  }));
 }
 
 async function getPublishedStates() {
