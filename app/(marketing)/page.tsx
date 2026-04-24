@@ -158,23 +158,31 @@ export default async function HomePage() {
                   </div>
                   <input
                     type="text"
-                    name="search"
+                    name="q"
                     placeholder="Search by spa name, city, or state"
                     className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                    readOnly
                   />
                 </div>
                 <div className="flex gap-3">
                   <Button type="submit" size="lg" className="flex-1 sm:flex-none">
-                    Browse Spas
-                    <ArrowRight data-icon="inline-end" />
-                  </Button>
-                  <Button asChild size="lg" variant="outline" className="flex-1 sm:flex-none">
-                    <Link href="/claim">Add or Claim a Listing</Link>
+                    Search
+                    <Search data-icon="inline-end" className="size-4" />
                   </Button>
                 </div>
               </div>
             </form>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg">
+                <Link href="/spas">
+                  Browse Spas
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/claim">Add or Claim a Listing</Link>
+              </Button>
+            </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {[

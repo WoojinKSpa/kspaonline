@@ -1,13 +1,20 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowUpRight, MapPin } from "lucide-react";
+import { ArrowUpRight, MapPin, Search, X } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+type SpasPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
 type PublishedSpa = {
   id: string;
@@ -15,54 +22,282 @@ type PublishedSpa = {
   name: string;
   city: string;
   state: string | null;
+  postal_code: string | null;
+  country: string | null;
   summary: string | null;
-  listing_categories: string[] | null;
+  is_featured: boolean;
+  listing_categories: string[];
 };
+
+type FilterOptions = {
+  countries: string[];
+  states: string[];
+  cities: string[];
+};
+
+type DirectoryFilters = {
+  country: string;
+  state: string;
+  city: string;
+  postal_code: string;
+  q: string;
+};
+
+const SPA_SELECT: string =
+  "id, slug, name, city, state, postal_code, country, summary, is_featured, listing_categories";
+const FILTER_OPTION_SELECT: string = "country, state, city";
 
 export const metadata = {
   title: "Browse Spas",
 };
 
-export default async function SpasPage() {
-  noStore();
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
 
+function cleanParam(value: string | string[] | undefined) {
+  return firstParam(value).trim().slice(0, 120);
+}
+
+function cleanSearchTerm(value: string) {
+  return value.replace(/[^a-zA-Z0-9\s.-]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function uniqueSorted(values: Array<unknown>) {
+  return [...new Set(
+    values
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+}
+
+function toPublishedSpa(row: Record<string, unknown>): PublishedSpa {
+  return {
+    id: String(row.id),
+    slug: String(row.slug),
+    name: String(row.name),
+    city: String(row.city),
+    state: typeof row.state === "string" ? row.state : null,
+    postal_code: typeof row.postal_code === "string" ? row.postal_code : null,
+    country: typeof row.country === "string" ? row.country : null,
+    summary: typeof row.summary === "string" ? row.summary : null,
+    is_featured: Boolean(row.is_featured),
+    listing_categories: Array.isArray(row.listing_categories)
+      ? row.listing_categories.map((value) => String(value))
+      : [],
+  };
+}
+
+async function getFilterOptions(): Promise<FilterOptions> {
   const supabase = await createSupabaseServerClient();
-  const queryPublishedSpas = (orderBy: "created_at" | "id") =>
-    supabase
-      .from("spas")
-      .select("id, slug, name, city, state, summary, listing_categories")
-      .eq("status", "published")
-      .order(orderBy, { ascending: false });
+  const { data, error } = await supabase
+    .from("spas")
+    .select(FILTER_OPTION_SELECT)
+    .eq("status", "published");
 
-  let { data, error } = await queryPublishedSpas("created_at");
-
-  // Keep the preferred ordering when the schema supports it, but fall back
-  // gracefully for older tables that have not added created_at yet.
-  if (error?.message.includes("created_at")) {
-    const fallbackResult = await queryPublishedSpas("id");
-    data = fallbackResult.data;
-    error = fallbackResult.error;
+  if (error) {
+    throw new Error(`Failed to load spa filter options: ${error.message}`);
   }
+
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+
+  return {
+    countries: uniqueSorted(rows.map((row) => row.country)),
+    states: uniqueSorted(rows.map((row) => row.state)),
+    cities: uniqueSorted(rows.map((row) => row.city)),
+  };
+}
+
+async function getPublishedSpas(filters: DirectoryFilters) {
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("spas")
+    .select(SPA_SELECT)
+    .eq("status", "published");
+
+  if (filters.country) {
+    query = query.ilike("country", filters.country);
+  }
+
+  if (filters.state) {
+    query = query.ilike("state", filters.state);
+  }
+
+  if (filters.city) {
+    query = query.ilike("city", filters.city);
+  }
+
+  if (filters.postal_code) {
+    query = query.ilike("postal_code", `${filters.postal_code}%`);
+  }
+
+  const searchTerm = cleanSearchTerm(filters.q);
+
+  if (searchTerm) {
+    const searchPattern = `%${searchTerm}%`;
+    query = query.or(
+      [
+        `name.ilike.${searchPattern}`,
+        `city.ilike.${searchPattern}`,
+        `state.ilike.${searchPattern}`,
+        `postal_code.ilike.${searchPattern}`,
+        `country.ilike.${searchPattern}`,
+      ].join(",")
+    );
+  }
+
+  const { data, error } = await query
+    .order("is_featured", { ascending: false })
+    .order("name", { ascending: true });
 
   if (error) {
     throw new Error(`Failed to load spas: ${error.message}`);
   }
 
-  const spas = (data ?? []) as PublishedSpa[];
+  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map(toPublishedSpa);
+}
+
+function SelectField({
+  label,
+  name,
+  value,
+  options,
+  placeholder,
+}: {
+  label: string;
+  name: keyof DirectoryFilters;
+  value: string;
+  options: string[];
+  placeholder: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={name}>{label}</Label>
+      <select
+        id={name}
+        name={name}
+        defaultValue={value}
+        className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+export default async function SpasPage({ searchParams }: SpasPageProps) {
+  noStore();
+
+  const params = await searchParams;
+  const filters: DirectoryFilters = {
+    country: cleanParam(params?.country),
+    state: cleanParam(params?.state),
+    city: cleanParam(params?.city),
+    postal_code: cleanParam(params?.postal_code),
+    q: cleanParam(params?.q),
+  };
+
+  const hasFilters = Object.values(filters).some(Boolean);
+  const [spas, filterOptions] = await Promise.all([
+    getPublishedSpas(filters),
+    getFilterOptions(),
+  ]);
 
   return (
     <Container className="py-16">
       <PageIntro
         eyebrow="Browse"
         title="Explore Korean spas by city and location."
-        description="Browse published spa listings from the live directory."
+        description="Search published spa listings by place, ZIP code, or spa name."
       />
+
+      <form
+        action="/spas"
+        className="surface mt-10 grid gap-4 p-5 shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)]"
+      >
+        <div className="grid gap-4 lg:grid-cols-[1.35fr_repeat(4,minmax(0,1fr))]">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="q">Search</Label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="q"
+                name="q"
+                defaultValue={filters.q}
+                placeholder="Spa name, city, state, ZIP, or country"
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <SelectField
+            label="Country"
+            name="country"
+            value={filters.country}
+            options={filterOptions.countries}
+            placeholder="Any country"
+          />
+          <SelectField
+            label="State"
+            name="state"
+            value={filters.state}
+            options={filterOptions.states}
+            placeholder="Any state"
+          />
+          <SelectField
+            label="City"
+            name="city"
+            value={filters.city}
+            options={filterOptions.cities}
+            placeholder="Any city"
+          />
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="postal_code">ZIP/Postal Code</Label>
+            <Input
+              id="postal_code"
+              name="postal_code"
+              defaultValue={filters.postal_code}
+              placeholder="92111"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {spas.length} {spas.length === 1 ? "spa" : "spas"} found
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {hasFilters ? (
+              <Button asChild variant="outline">
+                <Link href="/spas">
+                  <X data-icon="inline-start" className="size-4" />
+                  Clear filters
+                </Link>
+              </Button>
+            ) : null}
+            <Button type="submit">
+              Search spas
+              <Search data-icon="inline-end" className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </form>
 
       {spas.length === 0 ? (
         <div className="mt-10 surface p-10 text-center">
-          <h2 className="text-2xl font-semibold">No spas yet</h2>
+          <h2 className="text-2xl font-semibold">
+            {hasFilters ? "No spas match your filters" : "No spas yet"}
+          </h2>
           <p className="mt-3 text-muted-foreground">
-            Published spa listings will appear here once they are added.
+            {hasFilters
+              ? "Try clearing a filter or searching a broader city, state, ZIP, or spa name."
+              : "Published spa listings will appear here once they are added."}
           </p>
         </div>
       ) : (
@@ -72,7 +307,7 @@ export default async function SpasPage() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    {spa.listing_categories?.[0] ? (
+                    {spa.listing_categories[0] ? (
                       <Badge variant="secondary" className="rounded-full">
                         {spa.listing_categories[0]}
                       </Badge>
@@ -93,7 +328,7 @@ export default async function SpasPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <p className="text-sm font-medium text-foreground">
-                  {[spa.city, spa.state].filter(Boolean).join(", ")}
+                  {[spa.city, spa.state, spa.postal_code].filter(Boolean).join(", ")}
                 </p>
                 <p className="text-sm leading-6 text-muted-foreground">
                   {spa.summary || "No summary available yet."}
