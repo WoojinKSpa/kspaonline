@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useRef, useState } from "react";
+import { useState, useTransition } from "react";
 import { GripVertical, Star, X } from "lucide-react";
 
 import type { SpaImage } from "@/lib/spa-images";
@@ -23,37 +23,54 @@ export function GalleryImageGrid({
   deleteAction,
 }: GalleryImageGridProps) {
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
-  const reorderFormRef = useRef<HTMLFormElement>(null);
-  const draggedInputRef = useRef<HTMLInputElement>(null);
-  const targetInputRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleReorder(draggedId: string, targetId: string) {
+    if (!draggedId || draggedId === targetId) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("dragged_image_id", draggedId);
+    formData.set("target_image_id", targetId);
+
+    startTransition(() => {
+      void reorderAction(formData);
+    });
+  }
 
   return (
-    <>
-      <form action={reorderAction} ref={reorderFormRef} className="hidden">
-        <input ref={draggedInputRef} type="hidden" name="dragged_image_id" />
-        <input ref={targetInputRef} type="hidden" name="target_image_id" />
-      </form>
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {images.map((image, index) => (
+        <div
+          key={image.id}
+          draggable={!isPending}
+          onDragStart={(event) => {
+            setDraggedImageId(image.id);
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", image.id);
+          }}
+          onDragEnd={() => setDraggedImageId(null)}
+          onDragOver={(event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            const droppedImageId =
+              event.dataTransfer.getData("text/plain") || draggedImageId;
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {images.map((image, index) => (
+            void handleReorder(droppedImageId, image.id);
+            setDraggedImageId(null);
+          }}
+          className="overflow-hidden rounded-3xl border border-border bg-background p-3 shadow-sm transition hover:border-primary/30"
+        >
           <div
-            key={image.id}
-            draggable
-            onDragStart={() => setDraggedImageId(image.id)}
-            onDragEnd={() => setDraggedImageId(null)}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={() => {
-              if (!draggedImageId || draggedImageId === image.id) {
-                return;
-              }
-
-              if (draggedInputRef.current && targetInputRef.current && reorderFormRef.current) {
-                draggedInputRef.current.value = draggedImageId;
-                targetInputRef.current.value = image.id;
-                reorderFormRef.current.requestSubmit();
-              }
-            }}
-            className="overflow-hidden rounded-3xl border border-border bg-background p-3 shadow-sm transition hover:border-primary/30"
+            className={
+              draggedImageId === image.id
+                ? "opacity-60"
+                : undefined
+            }
           >
             <div className="relative">
               <img
@@ -99,7 +116,13 @@ export function GalleryImageGrid({
               <div className="mt-3">
                 <form action={setFeaturedAction}>
                   <input type="hidden" name="image_id" value={image.id} />
-                  <Button type="submit" variant="outline" size="sm" className="h-8 px-3">
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3"
+                    disabled={isPending}
+                  >
                     <Star data-icon="inline-start" />
                     Feature
                   </Button>
@@ -107,8 +130,8 @@ export function GalleryImageGrid({
               </div>
             ) : null}
           </div>
-        ))}
-      </div>
-    </>
+        </div>
+      ))}
+    </div>
   );
 }
