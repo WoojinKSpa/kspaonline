@@ -7,10 +7,21 @@ export type AdminSpa = {
   id: string;
   name: string;
   slug: string;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
   address_line_1: string | null;
+  address_line_2: string | null;
   city: string;
   state: string | null;
   postal_code: string | null;
+  country: string | null;
+  hours_text: string | null;
+  pricing_text: string | null;
+  what_to_know: string | null;
+  important_notes: string | null;
+  google_review_url: string | null;
+  yelp_review_url: string | null;
   status: SpaStatus;
   is_featured: boolean;
   business_email: string | null;
@@ -32,13 +43,24 @@ export type AdminSpa = {
 type SpaPayload = {
   name: string;
   slug: string;
+  website?: string | null;
+  phone?: string | null;
+  email?: string | null;
   address_line_1?: string | null;
+  address_line_2?: string | null;
   city: string;
   status: SpaStatus;
   state?: string | null;
   postal_code?: string | null;
+  country?: string | null;
   summary?: string | null;
   description?: string | null;
+  hours_text?: string | null;
+  pricing_text?: string | null;
+  what_to_know?: string | null;
+  important_notes?: string | null;
+  google_review_url?: string | null;
+  yelp_review_url?: string | null;
   is_featured?: boolean;
   business_email?: string | null;
   business_website?: string | null;
@@ -56,11 +78,22 @@ type SpaPayload = {
 
 const REQUIRED_LIST_COLUMNS = ["id", "name", "slug", "city", "status"] as const;
 const OPTIONAL_COLUMNS = [
+  "website",
+  "phone",
+  "email",
   "address_line_1",
+  "address_line_2",
   "state",
   "postal_code",
+  "country",
   "summary",
   "description",
+  "hours_text",
+  "pricing_text",
+  "what_to_know",
+  "important_notes",
+  "google_review_url",
+  "yelp_review_url",
   "is_featured",
   "business_email",
   "business_website",
@@ -177,21 +210,54 @@ function applyMissingColumnDefaults(
     id: String(row.id),
     name: String(row.name ?? ""),
     slug: String(row.slug ?? ""),
+    website: missingColumns.includes("website")
+      ? null
+      : ((row.website as string | null | undefined) ?? null),
+    phone: missingColumns.includes("phone")
+      ? null
+      : ((row.phone as string | null | undefined) ?? null),
+    email: missingColumns.includes("email")
+      ? null
+      : ((row.email as string | null | undefined) ?? null),
     address_line_1: missingColumns.includes("address_line_1")
       ? null
       : ((row.address_line_1 as string | null | undefined) ?? null),
+    address_line_2: missingColumns.includes("address_line_2")
+      ? null
+      : ((row.address_line_2 as string | null | undefined) ?? null),
     city: String(row.city ?? ""),
     status: (row.status as SpaStatus | undefined) ?? "draft",
     state: missingColumns.includes("state") ? null : ((row.state as string | null | undefined) ?? null),
     postal_code: missingColumns.includes("postal_code")
       ? null
       : ((row.postal_code as string | null | undefined) ?? null),
+    country: missingColumns.includes("country")
+      ? null
+      : ((row.country as string | null | undefined) ?? null),
     summary: missingColumns.includes("summary")
       ? null
       : ((row.summary as string | null | undefined) ?? null),
     description: missingColumns.includes("description")
       ? null
       : ((row.description as string | null | undefined) ?? null),
+    hours_text: missingColumns.includes("hours_text")
+      ? null
+      : ((row.hours_text as string | null | undefined) ?? null),
+    pricing_text: missingColumns.includes("pricing_text")
+      ? null
+      : ((row.pricing_text as string | null | undefined) ?? null),
+    what_to_know: missingColumns.includes("what_to_know")
+      ? null
+      : ((row.what_to_know as string | null | undefined) ?? null),
+    important_notes: missingColumns.includes("important_notes")
+      ? null
+      : ((row.important_notes as string | null | undefined) ?? null),
+    google_review_url: missingColumns.includes("google_review_url")
+      ? null
+      : ((row.google_review_url as string | null | undefined) ?? null),
+    yelp_review_url: missingColumns.includes("yelp_review_url")
+      ? null
+      : ((row.yelp_review_url as string | null | undefined) ?? null),
     is_featured: missingColumns.includes("is_featured")
       ? false
       : Boolean(row.is_featured),
@@ -293,13 +359,24 @@ function buildSpaPayload(formData: FormData): SpaPayload {
   return {
     name,
     slug,
+    website: emptyToNull(formData.get("website")),
+    phone: emptyToNull(formData.get("phone")),
+    email: emptyToNull(formData.get("email")),
     address_line_1: emptyToNull(formData.get("address_line_1")),
+    address_line_2: emptyToNull(formData.get("address_line_2")),
     city,
     status,
     state: emptyToNull(formData.get("state")),
     postal_code: emptyToNull(formData.get("postal_code")),
+    country: emptyToNull(formData.get("country")),
     summary: emptyToNull(formData.get("summary")),
     description: emptyToNull(formData.get("description")),
+    hours_text: emptyToNull(formData.get("hours_text")),
+    pricing_text: emptyToNull(formData.get("pricing_text")),
+    what_to_know: emptyToNull(formData.get("what_to_know")),
+    important_notes: emptyToNull(formData.get("important_notes")),
+    google_review_url: emptyToNull(formData.get("google_review_url")),
+    yelp_review_url: emptyToNull(formData.get("yelp_review_url")),
     is_featured: formData.get("is_featured") === "on",
     business_email: emptyToNull(formData.get("business_email")),
     business_website: emptyToNull(formData.get("business_website")),
@@ -323,11 +400,22 @@ async function writeSpaWithFallback(
 ): Promise<{ id: string }> {
   const supabase = createSupabaseAdminClient();
   const optionalKeys: OptionalColumn[] = [
+    "website",
+    "phone",
+    "email",
     "address_line_1",
+    "address_line_2",
     "state",
     "postal_code",
+    "country",
     "summary",
     "description",
+    "hours_text",
+    "pricing_text",
+    "what_to_know",
+    "important_notes",
+    "google_review_url",
+    "yelp_review_url",
     "is_featured",
     "business_email",
     "business_website",
