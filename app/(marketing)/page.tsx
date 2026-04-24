@@ -83,24 +83,36 @@ async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
   }));
 }
 
-async function getPublishedStates() {
+async function getDirectoryStats() {
   const supabase = await createSupabaseServerClient();
+  const locationSelect: string = "state, country";
   const { data, error } = await supabase
     .from("spas")
-    .select("state")
+    .select(locationSelect)
     .eq("status", "published")
-    .not("state", "is", null)
     .order("state", { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to load states: ${error.message}`);
+    throw new Error(`Failed to load directory stats: ${error.message}`);
   }
 
-  return [...new Set(
-    (data ?? [])
-      .map((row) => row.state?.trim())
-      .filter((state): state is string => Boolean(state))
-  )];
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+  const states = [...new Set(
+    rows
+      .map((row) => (typeof row.state === "string" ? row.state.trim() : ""))
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+  const countries = [...new Set(
+    rows
+      .map((row) => (typeof row.country === "string" ? row.country.trim() : ""))
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+
+  return {
+    listingCount: rows.length,
+    states,
+    countries,
+  };
 }
 
 function SectionIntro({
@@ -128,10 +140,11 @@ function SectionIntro({
 export default async function HomePage() {
   noStore();
 
-  const [featuredSpas, states] = await Promise.all([
+  const [featuredSpas, directoryStats] = await Promise.all([
     getFeaturedSpas(),
-    getPublishedStates(),
+    getDirectoryStats(),
   ]);
+  const { countries, listingCount, states } = directoryStats;
 
   return (
     <div className="pb-20">
@@ -187,16 +200,16 @@ export default async function HomePage() {
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {[
                 {
-                  label: "Live directory",
-                  value: featuredSpas.length > 0 ? `${featuredSpas.length}+` : "Growing",
+                  label: "Spa Listings",
+                  value: String(listingCount),
                 },
                 {
-                  label: "Browse by state",
-                  value: states.length > 0 ? String(states.length) : "Soon",
+                  label: "States",
+                  value: String(states.length),
                 },
                 {
-                  label: "Directory focus",
-                  value: "Korean spas",
+                  label: "Countries",
+                  value: String(countries.length),
                 },
               ].map((stat) => (
                 <div
