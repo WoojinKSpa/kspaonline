@@ -117,7 +117,7 @@ async function ClaimFormContent({
                     className="rounded-2xl"
                   />
                   <p className="text-xs text-gray-500">
-                    We'll use this to contact you about your claim
+                    We&apos;ll use this to contact you about your claim
                   </p>
                 </div>
 
