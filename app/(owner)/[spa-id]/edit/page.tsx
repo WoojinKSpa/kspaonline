@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
@@ -45,7 +46,7 @@ export default async function OwnerEditSpaPage({ params }: Props) {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <Link
-          href="/owner/dashboard"
+          href={"/owner/dashboard" as Route}
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6"
         >
           <ChevronLeft className="size-4" />
