@@ -85,11 +85,9 @@ async function OwnerDashboardContent() {
               <p className="text-muted-foreground mb-4">
                 You don&apos;t own any spas yet.
               </p>
-              <Link href="/spas" asChild>
-                <Button variant="outline" className="rounded-full">
-                  Browse spas to claim one
-                </Button>
-              </Link>
+              <Button asChild variant="outline" className="rounded-full">
+                <Link href="/spas">Browse spas to claim one</Link>
+              </Button>
             </CardContent>
           </Card>
         )}
