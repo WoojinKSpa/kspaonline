@@ -106,7 +106,7 @@ async function ClaimsListContent({
                       {claim.message && (
                         <div>
                           <p className="text-sm text-muted-foreground">Message</p>
-                          <p className="text-sm italic text-gray-700">"{claim.message}"</p>
+                          <p className="text-sm italic text-gray-700">&quot;{claim.message}&quot;</p>
                         </div>
                       )}
 

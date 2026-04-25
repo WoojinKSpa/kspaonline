@@ -475,3 +475,30 @@ export async function deleteAdminSpa(id: string) {
     throw new Error(`Failed to delete spa: ${error.message}`);
   }
 }
+
+export async function getPublishedSpaBySlug(slug: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("spas")
+    .select("id, slug, name, city, state")
+    .eq("status", "published")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error(`Failed to load spa: ${error.message}`);
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: String(data.id ?? ""),
+    slug: data.slug ?? slug,
+    name: data.name ?? "Untitled spa",
+    city: data.city ?? null,
+    state: data.state ?? null,
+  };
+}
