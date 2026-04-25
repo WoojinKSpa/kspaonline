@@ -239,19 +239,20 @@ export async function getSpasByOwnerEmail(
     return [];
   }
 
+  type SpaRow = {
+    id: string;
+    slug: string;
+    name: string;
+    city: string;
+    state: string | null;
+  };
   type RawOwnerRecord = {
-    spas: {
-      id: string;
-      slug: string;
-      name: string;
-      city: string;
-      state: string | null;
-    } | null;
+    spas: SpaRow | SpaRow[] | null;
   };
 
   return (data as RawOwnerRecord[] || [])
-    .map((owner) => owner.spas)
-    .filter(Boolean);
+    .map((owner) => (Array.isArray(owner.spas) ? owner.spas[0] : owner.spas))
+    .filter((spa): spa is SpaRow => spa !== null && spa !== undefined);
 }
 
 // Get spa owner by spa_id
