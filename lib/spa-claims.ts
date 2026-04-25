@@ -78,6 +78,8 @@ export async function listAllClaimRequests(): Promise<ClaimRequestWithSpa[]> {
   }
 
   // Flatten the spa data
+  // Supabase may return the joined record as an object or array depending on inferred cardinality
+  type SpaRow = { name: string; city: string; state: string | null };
   type RawClaimRequest = {
     id: string;
     spa_id: string;
@@ -87,22 +89,25 @@ export async function listAllClaimRequests(): Promise<ClaimRequestWithSpa[]> {
     status: string;
     created_at: string;
     updated_at: string;
-    spas?: { name: string; city: string; state: string | null } | null;
+    spas?: SpaRow | SpaRow[] | null;
   };
 
-  return (data as RawClaimRequest[] || []).map((claim) => ({
-    id: claim.id,
-    spa_id: claim.spa_id,
-    requester_name: claim.requester_name,
-    requester_email: claim.requester_email,
-    message: claim.message,
-    status: claim.status as "pending" | "approved" | "rejected",
-    created_at: claim.created_at,
-    updated_at: claim.updated_at,
-    spa_name: claim.spas?.name,
-    spa_city: claim.spas?.city,
-    spa_state: claim.spas?.state ?? undefined,
-  }));
+  return (data as RawClaimRequest[] || []).map((claim) => {
+    const spa = Array.isArray(claim.spas) ? claim.spas[0] : claim.spas;
+    return {
+      id: claim.id,
+      spa_id: claim.spa_id,
+      requester_name: claim.requester_name,
+      requester_email: claim.requester_email,
+      message: claim.message,
+      status: claim.status as "pending" | "approved" | "rejected",
+      created_at: claim.created_at,
+      updated_at: claim.updated_at,
+      spa_name: spa?.name,
+      spa_city: spa?.city,
+      spa_state: spa?.state ?? undefined,
+    };
+  });
 }
 
 // Get a single claim request
@@ -136,6 +141,10 @@ export async function getClaimRequest(
 
   if (!data) return null;
 
+  type SpaRow = { name: string; city: string; state: string | null };
+  const spasField = data.spas as SpaRow | SpaRow[] | null | undefined;
+  const spa = Array.isArray(spasField) ? spasField[0] : spasField;
+
   return {
     id: data.id,
     spa_id: data.spa_id,
@@ -145,9 +154,9 @@ export async function getClaimRequest(
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
-    spa_name: data.spas?.name,
-    spa_city: data.spas?.city,
-    spa_state: data.spas?.state ?? undefined,
+    spa_name: spa?.name,
+    spa_city: spa?.city,
+    spa_state: spa?.state ?? undefined,
   };
 }
 
