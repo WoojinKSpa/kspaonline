@@ -63,13 +63,12 @@ export default async function OwnerEditSpaPage({ params }: Props) {
         <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4">Images</h2>
           <SpaImageManager
-            spa={{ id: spaId, name: spa.name, slug: spa.slug }}
             images={images}
-            uploadLogoAction={uploadSpaLogoAction}
-            uploadGalleryImagesAction={uploadSpaGalleryImagesAction}
-            setFeaturedImageAction={setFeaturedSpaImageAction}
-            reorderImagesAction={reorderSpaImageAction}
-            deleteImageAction={deleteSpaImageAction}
+            logoAction={uploadSpaLogoAction.bind(null, spaId, spa.slug)}
+            galleryAction={uploadSpaGalleryImagesAction.bind(null, spaId, spa.slug)}
+            setFeaturedAction={setFeaturedSpaImageAction.bind(null, spaId, spa.slug)}
+            reorderImageAction={reorderSpaImageAction.bind(null, spaId, spa.slug)}
+            deleteImageAction={deleteSpaImageAction.bind(null, spaId, spa.slug)}
           />
         </div>
 
@@ -77,9 +76,43 @@ export default async function OwnerEditSpaPage({ params }: Props) {
         <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4">Spa Information</h2>
           <SpaEditorForm
-            spa={spa}
-            action={updateSpaAction}
-            submitLabel="Update Spa"
+            formAction={updateSpaAction.bind(null, spaId)}
+            submitLabel="Save changes"
+            defaultValues={{
+              name: spa.name,
+              slug: spa.slug,
+              website: spa.website,
+              phone: spa.phone,
+              email: spa.email,
+              address_line_1: spa.address_line_1,
+              address_line_2: spa.address_line_2,
+              city: spa.city,
+              state: spa.state,
+              postal_code: spa.postal_code,
+              country: spa.country,
+              hours_text: spa.hours_text,
+              pricing_text: spa.pricing_text,
+              what_to_know: spa.what_to_know,
+              important_notes: spa.important_notes,
+              google_review_url: spa.google_review_url,
+              yelp_review_url: spa.yelp_review_url,
+              status: spa.status,
+              is_featured: spa.is_featured,
+              business_email: spa.business_email,
+              business_website: spa.business_website,
+              business_phone: spa.business_phone,
+              facebook_url: spa.facebook_url,
+              instagram_url: spa.instagram_url,
+              tiktok_url: spa.tiktok_url,
+              twitter_url: spa.twitter_url,
+              youtube_url: spa.youtube_url,
+              day_pass_offered: spa.day_pass_offered,
+              day_pass_price: spa.day_pass_price,
+              listing_categories: spa.listing_categories,
+              summary: spa.summary,
+              description: spa.description ?? "",
+              amenities: spa.amenities,
+            }}
           />
         </div>
       </div>
