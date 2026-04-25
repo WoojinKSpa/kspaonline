@@ -1,0 +1,263 @@
+import { createSupabaseServerClient } from "./supabase/server";
+
+// Types
+export type ClaimRequest = {
+  id: string;
+  spa_id: string;
+  requester_name: string;
+  requester_email: string;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
+
+export type ClaimRequestWithSpa = ClaimRequest & {
+  spa_name?: string;
+  spa_city?: string;
+  spa_state?: string;
+};
+
+export type SpaOwner = {
+  id: string;
+  spa_id: string;
+  email: string;
+  created_at: string;
+};
+
+// Submit a new claim request
+export async function submitClaimRequest(
+  spa_id: string,
+  requester_name: string,
+  requester_email: string,
+  message: string | null
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("spa_claim_requests")
+    .insert({
+      spa_id,
+      requester_name,
+      requester_email,
+      message,
+      status: "pending",
+    });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// List all claim requests (admin)
+export async function listAllClaimRequests(): Promise<ClaimRequestWithSpa[]> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("spa_claim_requests")
+    .select(
+      `
+      id,
+      spa_id,
+      requester_name,
+      requester_email,
+      message,
+      status,
+      created_at,
+      updated_at,
+      spas:spa_id(id, name, city, state)
+      `
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error listing claim requests:", error);
+    return [];
+  }
+
+  // Flatten the spa data
+  return (data || []).map((claim: any) => ({
+    id: claim.id,
+    spa_id: claim.spa_id,
+    requester_name: claim.requester_name,
+    requester_email: claim.requester_email,
+    message: claim.message,
+    status: claim.status,
+    created_at: claim.created_at,
+    updated_at: claim.updated_at,
+    spa_name: claim.spas?.name,
+    spa_city: claim.spas?.city,
+    spa_state: claim.spas?.state,
+  }));
+}
+
+// Get a single claim request
+export async function getClaimRequest(
+  claim_id: string
+): Promise<ClaimRequestWithSpa | null> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("spa_claim_requests")
+    .select(
+      `
+      id,
+      spa_id,
+      requester_name,
+      requester_email,
+      message,
+      status,
+      created_at,
+      updated_at,
+      spas:spa_id(id, name, city, state)
+      `
+    )
+    .eq("id", claim_id)
+    .single();
+
+  if (error) {
+    console.error("Error getting claim request:", error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    spa_id: data.spa_id,
+    requester_name: data.requester_name,
+    requester_email: data.requester_email,
+    message: data.message,
+    status: data.status,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    spa_name: data.spas?.name,
+    spa_city: data.spas?.city,
+    spa_state: data.spas?.state,
+  };
+}
+
+// Approve a claim request
+export async function approveClaim(
+  claim_id: string,
+  spa_id: string,
+  owner_email: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createSupabaseServerClient();
+
+  // Update claim status to approved
+  const { error: claimError } = await supabase
+    .from("spa_claim_requests")
+    .update({ status: "approved" })
+    .eq("id", claim_id);
+
+  if (claimError) {
+    return { success: false, error: claimError.message };
+  }
+
+  // Insert or update spa owner
+  const { error: ownerError } = await supabase
+    .from("spa_owners")
+    .upsert(
+      { spa_id, email: owner_email },
+      { onConflict: "spa_id" }
+    );
+
+  if (ownerError) {
+    return { success: false, error: ownerError.message };
+  }
+
+  return { success: true };
+}
+
+// Reject a claim request
+export async function rejectClaim(
+  claim_id: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("spa_claim_requests")
+    .update({ status: "rejected" })
+    .eq("id", claim_id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// Get spas owned by an email
+export async function getSpasByOwnerEmail(
+  email: string
+): Promise<
+  Array<{
+    id: string;
+    slug: string;
+    name: string;
+    city: string;
+    state: string | null;
+  }>
+> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("spa_owners")
+    .select(
+      `
+      spas:spa_id(id, slug, name, city, state)
+      `
+    )
+    .eq("email", email);
+
+  if (error) {
+    console.error("Error getting spas by owner email:", error);
+    return [];
+  }
+
+  return (data || [])
+    .map((owner: any) => owner.spas)
+    .filter(Boolean);
+}
+
+// Get spa owner by spa_id
+export async function getSpaOwner(spa_id: string): Promise<SpaOwner | null> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("spa_owners")
+    .select("id, spa_id, email, created_at")
+    .eq("spa_id", spa_id)
+    .single();
+
+  if (error) {
+    console.error("Error getting spa owner:", error);
+    return null;
+  }
+
+  return data;
+}
+
+// Check if a spa is owned by an email
+export async function checkSpaOwnership(
+  spa_id: string,
+  email: string
+): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("spa_owners")
+    .select("id")
+    .eq("spa_id", spa_id)
+    .eq("email", email)
+    .single();
+
+  if (error) {
+    return false;
+  }
+
+  return !!data;
+}

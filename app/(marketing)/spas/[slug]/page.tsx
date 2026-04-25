@@ -13,6 +13,7 @@ import {
   Share2,
   Star,
   XCircle,
+  Heart,
 } from "lucide-react";
 
 import {
@@ -22,6 +23,7 @@ import {
 import { Container } from "@/components/layout/container";
 import { SpaGalleryLightbox } from "@/components/spas/spa-gallery-lightbox";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listSpaImagesBySpaId } from "@/lib/spa-images";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -362,6 +364,25 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                     ))}
                   </div>
                 ) : null}
+
+                {/* Claim Listing Button */}
+                <div className="mt-6 border-t pt-6">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Do you own or manage this spa?
+                  </p>
+                  <Link href={`/claim/${spa.slug}` as Route}>
+                    <Button
+                      variant="outline"
+                      className="rounded-full w-full sm:w-auto"
+                      onClick={(e) => {
+                        // Prevent default link behavior is handled by Link
+                      }}
+                    >
+                      <Heart className="mr-2 size-4" />
+                      Claim this listing
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>

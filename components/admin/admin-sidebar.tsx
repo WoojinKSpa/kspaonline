@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 const links: Array<{ href: Route; label: string }> = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/spas", label: "Spas" },
+  { href: "/admin/claims", label: "Claims" },
   { href: "/admin/spas/new", label: "Add spa" },
 ];
 
