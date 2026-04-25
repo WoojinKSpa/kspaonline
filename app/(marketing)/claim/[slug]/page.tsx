@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
@@ -80,7 +81,7 @@ async function ClaimFormContent({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={(fd) => submitClaimAction(slug, fd)} className="space-y-6">
+              <form action={submitClaimAction.bind(null, slug)} className="space-y-6">
                 {/* Spa Info Display */}
                 <div className="p-4 bg-gray-50 rounded-lg border">
                   <p className="text-sm text-gray-600">Claiming:</p>
@@ -142,13 +143,13 @@ async function ClaimFormContent({
                     Submit Claim Request
                   </Button>
                   <Button
+                    asChild
                     type="button"
                     variant="outline"
                     size="lg"
                     className="rounded-full"
-                    onClick={() => window.history.back()}
                   >
-                    Cancel
+                    <Link href={`/spas/${slug}`}>Cancel</Link>
                   </Button>
                 </div>
               </form>
@@ -159,12 +160,12 @@ async function ClaimFormContent({
         {success && (
           <div className="text-center">
             <Button
-              onClick={() => (window.location.href = `/spas/${slug}`)}
+              asChild
               variant="outline"
               size="lg"
               className="rounded-full"
             >
-              Back to Spa Listing
+              <Link href={`/spas/${slug}`}>Back to Spa Listing</Link>
             </Button>
           </div>
         )}
