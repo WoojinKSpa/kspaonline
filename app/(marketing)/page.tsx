@@ -187,7 +187,7 @@ export default async function HomePage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/claim" as Route>Add or Claim a Listing</Link>
+                <Link href={"/claim" as Route}>Add or Claim a Listing</Link>
               </Button>
             </div>
 
