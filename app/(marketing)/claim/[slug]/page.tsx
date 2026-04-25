@@ -52,6 +52,16 @@ async function ClaimFormContent({
                   <p className="text-sm text-green-800 mt-1">
                     Thank you for submitting your claim request. Our team will review it and contact you at the email address provided within 2-3 business days.
                   </p>
+                  <p className="text-sm text-green-800 mt-3">
+                    Once approved, sign in at{" "}
+                    <Link
+                      href="/owner/login"
+                      className="font-semibold underline"
+                    >
+                      /owner/login
+                    </Link>{" "}
+                    using the same email — we&apos;ll send you a one-click sign-in link.
+                  </p>
                 </div>
               </div>
             </CardContent>

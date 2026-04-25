@@ -5,6 +5,7 @@ import { verifyOwnerAuthenticated } from "@/lib/owner-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { ownerSignOutAction } from "./actions";
 
 async function OwnerLayoutContent({ children }: { children: React.ReactNode }) {
   // Verify user is authenticated
@@ -36,7 +37,7 @@ async function OwnerLayoutContent({ children }: { children: React.ReactNode }) {
               <Button variant="outline" className="rounded-full" asChild>
                 <Link href="/">Back to site</Link>
               </Button>
-              <form action="/api/auth/signout" method="POST">
+              <form action={ownerSignOutAction}>
                 <Button type="submit" variant="ghost" className="rounded-full">
                   Sign out
                 </Button>

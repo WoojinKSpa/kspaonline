@@ -3,7 +3,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { approveClaim, rejectClaim } from "@/lib/spa-claims";
+import { approveClaim, rejectClaim, revokeSpaOwner } from "@/lib/spa-claims";
 
 export async function approveClaimAction(formData: FormData) {
   const claim_id = formData.get("claim_id") as string;
@@ -43,4 +43,23 @@ export async function rejectClaimAction(formData: FormData) {
 
   revalidatePath("/admin/claims");
   redirect("/admin/claims?success=Claim+rejected" as Route);
+}
+
+export async function revokeOwnerAction(formData: FormData) {
+  const spa_id = formData.get("spa_id") as string;
+
+  if (!spa_id) {
+    redirect("/admin/claims?error=Missing+spa+ID" as Route);
+  }
+
+  const result = await revokeSpaOwner(spa_id);
+
+  if (!result.success) {
+    redirect(
+      `/admin/claims?error=${encodeURIComponent(result.error || "Failed to revoke owner access")}` as Route
+    );
+  }
+
+  revalidatePath("/admin/claims");
+  redirect("/admin/claims?success=Owner+access+revoked" as Route);
 }

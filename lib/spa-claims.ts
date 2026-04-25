@@ -193,6 +193,39 @@ export async function approveClaim(
   return { success: true };
 }
 
+// Revoke a spa owner's access (delete from spa_owners). Optionally also
+// revert any approved claim row for that spa back to "pending" so a
+// re-approval is required.
+export async function revokeSpaOwner(
+  spa_id: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createSupabaseServerClient();
+
+  const { error: deleteError } = await supabase
+    .from("spa_owners")
+    .delete()
+    .eq("spa_id", spa_id);
+
+  if (deleteError) {
+    return { success: false, error: deleteError.message };
+  }
+
+  // Mark any approved claims for this spa as rejected so the audit trail
+  // reflects revocation. Use "rejected" rather than "pending" to avoid
+  // re-approval surfacing as a still-valid request.
+  const { error: claimError } = await supabase
+    .from("spa_claim_requests")
+    .update({ status: "rejected" })
+    .eq("spa_id", spa_id)
+    .eq("status", "approved");
+
+  if (claimError) {
+    return { success: false, error: claimError.message };
+  }
+
+  return { success: true };
+}
+
 // Reject a claim request
 export async function rejectClaim(
   claim_id: string

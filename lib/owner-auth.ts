@@ -39,7 +39,7 @@ export async function verifyOwnerAccess(spa_id: string): Promise<string> {
   const email = await getOwnerEmail();
 
   if (!email) {
-    redirect("/login?redirectTo=/owner/dashboard" as Route);
+    redirect("/owner/login" as Route);
   }
 
   const hasAccess = await checkOwnerAccess(spa_id, email);
@@ -56,7 +56,7 @@ export async function verifyOwnerAuthenticated(): Promise<string> {
   const email = await getOwnerEmail();
 
   if (!email) {
-    redirect("/login?redirectTo=/owner/dashboard" as Route);
+    redirect("/owner/login" as Route);
   }
 
   return email;

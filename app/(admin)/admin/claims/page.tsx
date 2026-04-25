@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { listAllClaimRequests } from "@/lib/spa-claims";
-import { approveClaimAction, rejectClaimAction } from "./actions";
+import {
+  approveClaimAction,
+  rejectClaimAction,
+  revokeOwnerAction,
+} from "./actions";
 
 async function ClaimsListContent({
   success,
@@ -163,28 +167,55 @@ async function ClaimsListContent({
         </div>
       )}
 
-      {/* Approved Claims */}
+      {/* Approved Claims (active owners) */}
       {approvedClaims.length > 0 && (
         <div className="mt-10">
           <h2 className="text-2xl font-semibold mb-4">
-            Approved ({approvedClaims.length})
+            Active Owners ({approvedClaims.length})
           </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            These spas have approved owners with access to the owner dashboard.
+            Revoking access removes their listing in <code>spa_owners</code>{" "}
+            and marks the claim as rejected.
+          </p>
           <div className="space-y-4">
             {approvedClaims.map((claim) => (
               <Card key={claim.id} className="bg-green-50 border-green-200">
                 <CardContent className="pt-6">
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
                     <div>
                       <p className="text-sm text-muted-foreground">Spa</p>
                       <p className="font-semibold">{claim.spa_name}</p>
+                      {claim.spa_city && claim.spa_state && (
+                        <p className="text-sm text-muted-foreground">
+                          {claim.spa_city}, {claim.spa_state}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Owner</p>
                       <p className="font-semibold">{claim.requester_name}</p>
                       <p className="text-sm">{claim.requester_email}</p>
                     </div>
-                    <div className="text-right">
-                      <Badge className="bg-green-600 text-white">Approved</Badge>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge className="bg-green-600 text-white">
+                        Approved
+                      </Badge>
+                      <form action={revokeOwnerAction}>
+                        <input
+                          type="hidden"
+                          name="spa_id"
+                          value={claim.spa_id}
+                        />
+                        <Button
+                          type="submit"
+                          size="sm"
+                          variant="outline"
+                          className="rounded-lg border-red-300 text-red-700 hover:bg-red-50"
+                        >
+                          Revoke Access
+                        </Button>
+                      </form>
                     </div>
                   </div>
                 </CardContent>

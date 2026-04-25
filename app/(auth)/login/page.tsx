@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isAdminEmail } from "@/lib/auth-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -27,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/admin");
+    redirect(isAdminEmail(user.email) ? "/admin" : "/owner/dashboard");
   }
 
   const params = await searchParams;
@@ -78,6 +79,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 /admin
               </Link>
               .
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Spa owner?{" "}
+              <Link
+                className="font-medium text-primary"
+                href="/owner/login"
+              >
+                Sign in here
+              </Link>{" "}
+              with a one-click link to your email.
             </p>
           </form>
         </CardContent>

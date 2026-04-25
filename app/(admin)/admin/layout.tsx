@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/app/(admin)/admin/actions";
@@ -5,6 +6,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/auth-helpers";
 
 export default async function AdminLayout({
   children,
@@ -17,7 +19,13 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?redirectTo=/admin");
+    redirect("/login?redirectTo=/admin" as Route);
+  }
+
+  if (!isAdminEmail(user.email)) {
+    // Authenticated but not an admin (e.g. an owner who magic-link'd in).
+    // Send them to their own dashboard.
+    redirect("/owner/dashboard" as Route);
   }
 
   return (
