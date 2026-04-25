@@ -187,7 +187,7 @@ export default async function HomePage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/claim">Add or Claim a Listing</Link>
+                <Link href="/claim" as Route>Add or Claim a Listing</Link>
               </Button>
             </div>
 
@@ -339,7 +339,7 @@ export default async function HomePage() {
                 guests discover your spa.
               </p>
               <Button asChild size="lg" className="mt-6">
-                <Link href="/claim">Claim your listing</Link>
+                <Link href="/claim" as Route>Claim your listing</Link>
               </Button>
             </div>
           </div>
