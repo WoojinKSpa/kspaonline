@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -28,7 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect(isAdminEmail(user.email) ? "/admin" : "/owner/dashboard");
+    redirect((isAdminEmail(user.email) ? "/admin" : "/owner/dashboard") as Route);
   }
 
   const params = await searchParams;
