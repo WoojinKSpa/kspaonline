@@ -101,7 +101,7 @@ export async function listAllClaimRequests(): Promise<ClaimRequestWithSpa[]> {
     updated_at: claim.updated_at,
     spa_name: claim.spas?.name,
     spa_city: claim.spas?.city,
-    spa_state: claim.spas?.state,
+    spa_state: claim.spas?.state ?? undefined,
   }));
 }
 
@@ -147,7 +147,7 @@ export async function getClaimRequest(
     updated_at: data.updated_at,
     spa_name: data.spas?.name,
     spa_city: data.spas?.city,
-    spa_state: data.spas?.state,
+    spa_state: data.spas?.state ?? undefined,
   };
 }
 
