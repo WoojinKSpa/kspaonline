@@ -1,8 +1,16 @@
 import { headers } from "next/headers";
 
 /**
- * Returns true if the given email is configured as an admin via the
- * ADMIN_EMAILS env var (comma-separated). Comparison is case-insensitive.
+ * Returns true if the given email should be granted admin access.
+ *
+ * Behaviour:
+ *  - If ADMIN_EMAILS is not set (or empty), ALL authenticated users are
+ *    treated as admins — this preserves the original behaviour and avoids
+ *    locking everyone out before the env var is configured.
+ *  - Once ADMIN_EMAILS is set (comma-separated), only listed addresses
+ *    pass; everyone else is routed to /owner/dashboard.
+ *
+ * Set ADMIN_EMAILS in Vercel / .env.local to enable role separation.
  */
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -11,6 +19,8 @@ export function isAdminEmail(email: string | null | undefined): boolean {
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+  // Not configured yet — fail open so existing admins aren't locked out.
+  if (allowed.length === 0) return true;
   return allowed.includes(email.toLowerCase());
 }
 
