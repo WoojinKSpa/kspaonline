@@ -78,13 +78,25 @@ export async function listAllClaimRequests(): Promise<ClaimRequestWithSpa[]> {
   }
 
   // Flatten the spa data
-  return (data || []).map((claim: any) => ({
+  type RawClaimRequest = {
+    id: string;
+    spa_id: string;
+    requester_name: string;
+    requester_email: string;
+    message: string | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    spas?: { name: string; city: string; state: string | null } | null;
+  };
+
+  return (data as RawClaimRequest[] || []).map((claim) => ({
     id: claim.id,
     spa_id: claim.spa_id,
     requester_name: claim.requester_name,
     requester_email: claim.requester_email,
     message: claim.message,
-    status: claim.status,
+    status: claim.status as "pending" | "approved" | "rejected",
     created_at: claim.created_at,
     updated_at: claim.updated_at,
     spa_name: claim.spas?.name,
@@ -218,8 +230,18 @@ export async function getSpasByOwnerEmail(
     return [];
   }
 
-  return (data || [])
-    .map((owner: any) => owner.spas)
+  type RawOwnerRecord = {
+    spas: {
+      id: string;
+      slug: string;
+      name: string;
+      city: string;
+      state: string | null;
+    } | null;
+  };
+
+  return (data as RawOwnerRecord[] || [])
+    .map((owner) => owner.spas)
     .filter(Boolean);
 }
 

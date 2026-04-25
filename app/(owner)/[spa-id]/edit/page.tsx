@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
-import { Button } from "@/components/ui/button";
 import { SpaEditorForm } from "@/components/admin/spa-editor-form";
 import { SpaImageManager } from "@/components/admin/spa-image-manager";
 import { verifyOwnerAccess } from "@/lib/owner-auth";

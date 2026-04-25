@@ -374,9 +374,6 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                     <Button
                       variant="outline"
                       className="rounded-full w-full sm:w-auto"
-                      onClick={(e) => {
-                        // Prevent default link behavior is handled by Link
-                      }}
                     >
                       <Heart className="mr-2 size-4" />
                       Claim this listing

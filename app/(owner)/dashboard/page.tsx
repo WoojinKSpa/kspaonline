@@ -3,8 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { getSpasByOwnerEmail } from "@/lib/spa-claims";
 import { verifyOwnerAuthenticated } from "@/lib/owner-auth";
 import { MapPin, Edit2, ExternalLink } from "lucide-react";
@@ -84,7 +83,7 @@ async function OwnerDashboardContent() {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground mb-4">
-                You don't own any spas yet.
+                You don&apos;t own any spas yet.
               </p>
               <Link href="/spas" asChild>
                 <Button variant="outline" className="rounded-full">
