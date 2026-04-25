@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "./supabase/server";
 
@@ -38,13 +39,13 @@ export async function verifyOwnerAccess(spa_id: string): Promise<string> {
   const email = await getOwnerEmail();
 
   if (!email) {
-    redirect("/login?redirectTo=/owner/dashboard");
+    redirect("/login?redirectTo=/owner/dashboard" as Route);
   }
 
   const hasAccess = await checkOwnerAccess(spa_id, email);
 
   if (!hasAccess) {
-    redirect("/owner/dashboard?error=You+do+not+own+this+spa");
+    redirect("/owner/dashboard?error=You+do+not+own+this+spa" as Route);
   }
 
   return email;
@@ -55,7 +56,7 @@ export async function verifyOwnerAuthenticated(): Promise<string> {
   const email = await getOwnerEmail();
 
   if (!email) {
-    redirect("/login?redirectTo=/owner/dashboard");
+    redirect("/login?redirectTo=/owner/dashboard" as Route);
   }
 
   return email;

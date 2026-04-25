@@ -1,5 +1,6 @@
 "use server";
 
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getPublishedSpaBySlug } from "@/lib/admin-spas";
@@ -12,17 +13,17 @@ export async function submitClaimAction(slug: string, formData: FormData) {
 
   // Validation
   if (!requester_name || !requester_name.trim()) {
-    redirect(`/claim/${slug}?error=Name+is+required`);
+    redirect(`/claim/${slug}?error=Name+is+required` as Route);
   }
 
   if (!requester_email || !requester_email.trim()) {
-    redirect(`/claim/${slug}?error=Email+is+required`);
+    redirect(`/claim/${slug}?error=Email+is+required` as Route);
   }
 
   // Get spa by slug
   const spa = await getPublishedSpaBySlug(slug);
   if (!spa) {
-    redirect(`/claim/${slug}?error=Spa+not+found`);
+    redirect(`/claim/${slug}?error=Spa+not+found` as Route);
   }
 
   // Submit claim request
@@ -35,11 +36,11 @@ export async function submitClaimAction(slug: string, formData: FormData) {
 
   if (!result.success) {
     redirect(
-      `/claim/${slug}?error=${encodeURIComponent(result.error || "Failed to submit claim")}`
+      `/claim/${slug}?error=${encodeURIComponent(result.error || "Failed to submit claim")}` as Route
     );
   }
 
   // Success - revalidate and redirect with success
   revalidatePath(`/claim/${slug}`);
-  redirect(`/claim/${slug}?success=true`);
+  redirect(`/claim/${slug}?success=true` as Route);
 }

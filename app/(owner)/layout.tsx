@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { verifyOwnerAuthenticated } from "@/lib/owner-auth";
@@ -18,7 +19,7 @@ async function OwnerLayoutContent({ children }: { children: React.ReactNode }) {
     .single();
 
   if (error || !owner) {
-    redirect("/?error=You+do+not+own+any+spas");
+    redirect("/?error=You+do+not+own+any+spas" as Route);
   }
 
   return (
