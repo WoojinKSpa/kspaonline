@@ -339,7 +339,7 @@ export default async function HomePage() {
                 guests discover your spa.
               </p>
               <Button asChild size="lg" className="mt-6">
-                <Link href="/claim" as Route>Claim your listing</Link>
+                <Link href={"/claim" as Route}>Claim your listing</Link>
               </Button>
             </div>
           </div>
