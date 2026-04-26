@@ -8,10 +8,12 @@ import {
 } from "@/app/(admin)/admin/spas/actions";
 import { notFound } from "next/navigation";
 
+import { QualityBadge } from "@/components/admin/quality-badge";
 import { SpaEditorForm } from "@/components/admin/spa-editor-form";
 import { SpaImageManager } from "@/components/admin/spa-image-manager";
 import { PageIntro } from "@/components/layout/page-intro";
 import { getAdminSpaById } from "@/lib/admin-spas";
+import { calculateQualityScore, getMissingFields } from "@/lib/quality-score";
 import { listSpaImagesBySpaId } from "@/lib/spa-images";
 
 type AdminSpaEditPageProps = {
@@ -27,6 +29,15 @@ export async function generateMetadata({ params }: AdminSpaEditPageProps) {
   };
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  website: "Website URL",
+  phone: "Phone number",
+  address: "Street address (with city + state)",
+  hours: "Hours of operation",
+  amenities: "At least one amenity",
+  images: "At least one photo",
+};
+
 export default async function AdminSpaEditPage({
   params,
 }: AdminSpaEditPageProps) {
@@ -38,14 +49,41 @@ export default async function AdminSpaEditPage({
   }
 
   const images = await listSpaImagesBySpaId(spa.id);
+  const hasImages = images.length > 0;
+  const quality = calculateQualityScore(spa, hasImages);
+  const missingFields = getMissingFields(quality.breakdown);
 
   return (
     <div className="flex flex-col gap-8">
-      <PageIntro
-        eyebrow="Admin"
-        title={`Edit ${spa.name}`}
-        description="Update a spa listing with server-side admin actions."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <PageIntro
+          eyebrow="Admin"
+          title={`Edit ${spa.name}`}
+          description="Update this spa listing. Warnings below show missing data — saving is never blocked."
+        />
+        <QualityBadge quality={quality} className="mt-1 shrink-0" />
+      </div>
+
+      {/* ── Missing field warnings ── */}
+      {missingFields.length > 0 && (
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm font-semibold text-yellow-900">
+            Missing information ({missingFields.length} item{missingFields.length !== 1 ? "s" : ""})
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {missingFields.map((field) => (
+              <li key={field} className="flex items-center gap-2 text-sm text-yellow-800">
+                <span aria-hidden className="text-yellow-500">⚠</span>
+                {FIELD_LABELS[field] ?? field}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-yellow-700">
+            These warnings are informational only — you can save the listing at any time.
+          </p>
+        </div>
+      )}
+
       <SpaImageManager
         logoAction={uploadSpaLogoAction.bind(null, spa.id, spa.slug)}
         galleryAction={uploadSpaGalleryImagesAction.bind(null, spa.id, spa.slug)}

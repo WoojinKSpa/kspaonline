@@ -140,6 +140,25 @@ function sortSpaImages(images: SpaImage[]) {
   });
 }
 
+/**
+ * Returns the set of spa IDs that have at least one image record.
+ * Used for quality score computation across all listings.
+ * Fails gracefully if the spa_images table does not yet exist.
+ */
+export async function getSpaIdsWithImages(): Promise<Set<string>> {
+  const supabase = createSupabaseAdminClient();
+  try {
+    const { data, error } = await supabase
+      .from("spa_images")
+      .select("spa_id");
+
+    if (error) return new Set();
+    return new Set((data ?? []).map((row) => String(row.spa_id)));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function listSpaImagesBySpaId(spaId: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase

@@ -476,6 +476,22 @@ export async function deleteAdminSpa(id: string) {
   }
 }
 
+/** Update only the status field of a spa. Used by quick-action buttons in the admin list. */
+export async function updateSpaStatus(
+  id: string,
+  status: SpaStatus
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("spas")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Failed to update spa status: ${error.message}`);
+  }
+}
+
 export async function getPublishedSpaBySlug(slug: string) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
