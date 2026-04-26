@@ -137,7 +137,14 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
                                 />
                               </td>
                               <td className="px-4 py-3 font-medium">
-                                {spa.name}
+                                <a
+                                  href={`/spas/${spa.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-primary hover:underline"
+                                >
+                                  {spa.name}
+                                </a>
                               </td>
                               <td className="px-4 py-3 text-muted-foreground">
                                 {spa.city}
