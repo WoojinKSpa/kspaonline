@@ -11,8 +11,23 @@ export const metadata = {
   title: "Admin Dashboard",
 };
 
-export default async function AdminDashboardPage() {
+const ATTENTION_PAGE_SIZE = 10;
+
+type Props = {
+  searchParams?: Promise<{ attn_page?: string }>;
+};
+
+export default async function AdminDashboardPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const attnPage = Math.max(1, parseInt(params?.attn_page ?? "1", 10));
+
   const stats = await getAdminStats();
+
+  const attnTotal = stats.needsAttention.length;
+  const attnTotalPages = Math.max(1, Math.ceil(attnTotal / ATTENTION_PAGE_SIZE));
+  const attnPageClamped = Math.min(attnPage, attnTotalPages);
+  const attnStart = (attnPageClamped - 1) * ATTENTION_PAGE_SIZE;
+  const attnSlice = stats.needsAttention.slice(attnStart, attnStart + ATTENTION_PAGE_SIZE);
 
   return (
     <div className="flex flex-col gap-10">
@@ -97,11 +112,26 @@ export default async function AdminDashboardPage() {
       </section>
 
       {/* ── Needs attention ─────────────────────────────────── */}
-      {stats.needsAttention.length > 0 && (
+      {attnTotal > 0 && (
         <section>
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-            Listings needing attention
-          </h2>
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Listings needing attention
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Each listing receives a quality score from 0–100 based on how
+              complete its profile is.{" "}
+              <span className="font-medium text-foreground">Images</span> and{" "}
+              <span className="font-medium text-foreground">address</span> carry
+              the most weight (20 pts each), followed by{" "}
+              <span className="font-medium text-foreground">website</span>,{" "}
+              <span className="font-medium text-foreground">phone</span>,{" "}
+              <span className="font-medium text-foreground">hours</span>, and{" "}
+              <span className="font-medium text-foreground">amenities</span> (15
+              pts each). Scores below 80 appear here, sorted worst first.
+            </p>
+          </div>
+
           <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border bg-secondary/30">
@@ -115,7 +145,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {stats.needsAttention.map((spa) => {
+                {attnSlice.map((spa) => {
                   const missing = getMissingFields(spa.quality.breakdown);
                   return (
                     <tr
@@ -153,6 +183,45 @@ export default async function AdminDashboardPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {attnTotalPages > 1 && (
+            <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                Showing {attnStart + 1}–{Math.min(attnStart + ATTENTION_PAGE_SIZE, attnTotal)} of{" "}
+                {attnTotal} listings
+              </span>
+              <div className="flex gap-2">
+                {attnPageClamped > 1 ? (
+                  <Link
+                    href={`/admin?attn_page=${attnPageClamped - 1}` as Route}
+                    className="rounded-lg border border-border px-3 py-1.5 font-medium transition-colors hover:bg-secondary/40"
+                  >
+                    ← Previous
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-border px-3 py-1.5 opacity-40">
+                    ← Previous
+                  </span>
+                )}
+                <span className="rounded-lg border border-border px-3 py-1.5">
+                  {attnPageClamped} / {attnTotalPages}
+                </span>
+                {attnPageClamped < attnTotalPages ? (
+                  <Link
+                    href={`/admin?attn_page=${attnPageClamped + 1}` as Route}
+                    className="rounded-lg border border-border px-3 py-1.5 font-medium transition-colors hover:bg-secondary/40"
+                  >
+                    Next →
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-border px-3 py-1.5 opacity-40">
+                    Next →
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

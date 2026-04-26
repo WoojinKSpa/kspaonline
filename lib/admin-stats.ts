@@ -54,9 +54,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     0
   );
 
-  const needsAttention = [...withMeta]
-    .sort((a, b) => a.quality.score - b.quality.score)
-    .slice(0, 10);
+  // All spas sorted worst-first; the page component handles pagination.
+  const needsAttention = [...withMeta].sort(
+    (a, b) => a.quality.score - b.quality.score
+  );
 
   return {
     total: spas.length,
