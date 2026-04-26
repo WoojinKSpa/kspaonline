@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
@@ -61,27 +62,27 @@ export async function SiteHeader() {
             <>
               {isAdmin && (
                 <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href="/admin">Admin</Link>
+                  <Link href={"/admin" as Route}>Admin</Link>
                 </Button>
               )}
               {isOwner && (
                 <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href="/owner/dashboard">Dashboard</Link>
+                  <Link href={"/owner/dashboard" as Route}>Dashboard</Link>
                 </Button>
               )}
               {!isAdmin && !isOwner && (
                 <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href="/account">My account</Link>
+                  <Link href={"/account" as Route}>My account</Link>
                 </Button>
               )}
             </>
           ) : (
             <>
               <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                <Link href="/signin">Sign in</Link>
+                <Link href={"/signin" as Route}>Sign in</Link>
               </Button>
               <Button asChild>
-                <Link href="/signup">Sign up</Link>
+                <Link href={"/signup" as Route}>Sign up</Link>
               </Button>
             </>
           )}

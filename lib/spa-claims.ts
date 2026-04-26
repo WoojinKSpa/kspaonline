@@ -2,7 +2,7 @@ import {
   createSupabaseServerClient,
   createSupabaseAdminClient,
 } from "./supabase/server";
-import { upsertProfile, getProfileByEmail, setProfileRole } from "./profiles";
+import { getProfileByEmail, setProfileRole } from "./profiles";
 
 // Types
 export type ClaimRequest = {
