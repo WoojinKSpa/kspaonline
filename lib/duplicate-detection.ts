@@ -1,4 +1,5 @@
 import type { AdminSpa } from "./admin-spas";
+import { pairKey } from "./ignored-duplicates";
 
 export type DuplicateGroup = {
   /** Human-readable reasons these were flagged (e.g. "Same phone number"). */
@@ -71,9 +72,14 @@ function union(parent: number[], a: number, b: number): void {
  *   - street address + city + state
  *
  * Returns groups of 2+ spas, sorted by group size descending.
- * This is a pure function — no database calls.
+ *
+ * @param ignoredPairs - Set of canonical pair keys (from getIgnoredPairSet())
+ *   for pairs that should never be grouped together.
  */
-export function detectDuplicates(spas: AdminSpa[]): DuplicateGroup[] {
+export function detectDuplicates(
+  spas: AdminSpa[],
+  ignoredPairs: Set<string> = new Set()
+): DuplicateGroup[] {
   const n = spas.length;
   if (n < 2) return [];
 
@@ -82,6 +88,9 @@ export function detectDuplicates(spas: AdminSpa[]): DuplicateGroup[] {
   const pairReasons = new Map<string, Set<string>>();
 
   function recordPair(a: number, b: number, reason: string) {
+    // Skip pairs the admin has explicitly marked as not duplicates
+    if (ignoredPairs.has(pairKey(spas[a].id, spas[b].id))) return;
+
     const lo = Math.min(a, b);
     const hi = Math.max(a, b);
     const key = `${lo}-${hi}`;

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { deleteAdminSpa } from "@/lib/admin-spas";
+import { ignoreGroup } from "@/lib/ignored-duplicates";
 import { deleteSpaImagesForSpa } from "@/lib/spa-images";
 
 /**
@@ -54,4 +55,30 @@ export async function mergeDuplicatesAction(formData: FormData) {
   redirect(
     `/admin/duplicates?merged=${deleteIds.length}` as Route
   );
+}
+
+/**
+ * Marks every pair in a duplicate group as "not duplicates" so they
+ * are suppressed from future detection runs.
+ *
+ * Form fields expected:
+ *   group_ids – comma-separated list of ALL spa IDs in the duplicate group
+ */
+export async function ignoreDuplicateGroupAction(formData: FormData) {
+  const groupIds = formData.get("group_ids");
+
+  if (typeof groupIds !== "string" || !groupIds) {
+    redirect("/admin/duplicates?error=Invalid+form+data" as Route);
+  }
+
+  const allIds = groupIds.split(",").filter(Boolean);
+
+  try {
+    await ignoreGroup(allIds);
+  } catch {
+    redirect("/admin/duplicates?error=Failed+to+ignore+group" as Route);
+  }
+
+  revalidatePath("/admin/duplicates" as Route);
+  redirect("/admin/duplicates?ignored=1" as Route);
 }

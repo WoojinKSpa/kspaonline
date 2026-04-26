@@ -1,26 +1,31 @@
 import type { Route } from "next";
 import Link from "next/link";
 
-import { mergeDuplicatesAction } from "@/app/(admin)/admin/duplicates/actions";
+import { ignoreDuplicateGroupAction, mergeDuplicatesAction } from "@/app/(admin)/admin/duplicates/actions";
 import { PageIntro } from "@/components/layout/page-intro";
 import { listAdminSpas } from "@/lib/admin-spas";
 import { detectDuplicates } from "@/lib/duplicate-detection";
+import { getIgnoredPairSet } from "@/lib/ignored-duplicates";
 
 export const metadata = {
   title: "Duplicate Detection | Admin",
 };
 
 type Props = {
-  searchParams?: Promise<{ merged?: string; error?: string }>;
+  searchParams?: Promise<{ merged?: string; ignored?: string; error?: string }>;
 };
 
 export default async function AdminDuplicatesPage({ searchParams }: Props) {
   const params = await searchParams;
   const mergedCount = params?.merged ? parseInt(params.merged, 10) : null;
+  const ignoredSuccess = params?.ignored === "1";
   const error = params?.error ? decodeURIComponent(params.error) : null;
 
-  const spas = await listAdminSpas();
-  const groups = detectDuplicates(spas);
+  const [spas, ignoredPairs] = await Promise.all([
+    listAdminSpas(),
+    getIgnoredPairSet(),
+  ]);
+  const groups = detectDuplicates(spas, ignoredPairs);
 
   const totalFlagged = groups.reduce((acc, g) => acc + g.spas.length, 0);
 
@@ -36,6 +41,11 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
       {mergedCount !== null && mergedCount > 0 && (
         <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           {mergedCount} duplicate listing{mergedCount !== 1 ? "s" : ""} permanently deleted.
+        </div>
+      )}
+      {ignoredSuccess && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Group ignored — it won&apos;t appear in future duplicate checks.
         </div>
       )}
       {error && (
@@ -197,6 +207,19 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
                         Keep selected — delete others
                       </button>
                     </div>
+                  </div>
+                </form>
+
+                {/* Ignore form — separate so it doesn't require the checkbox */}
+                <form action={ignoreDuplicateGroupAction} className="-mt-px">
+                  <input type="hidden" name="group_ids" value={groupIdsCsv} />
+                  <div className="flex justify-end rounded-b-2xl border border-t-0 border-border bg-background px-4 py-2">
+                    <button
+                      type="submit"
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Not duplicates — ignore this group
+                    </button>
                   </div>
                 </form>
               );
