@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ export function SpasListFilterBar({ q, status, missing, sort }: Props) {
       if (v) params.set(k, v);
     });
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname);
+    router.replace((qs ? `${pathname}?${qs}` : pathname) as Route);
   }
 
   const hasActiveFilters = !!(q || missing || sort);
