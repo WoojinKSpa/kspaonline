@@ -22,12 +22,9 @@ export default async function AdminDashboardPage() {
         description="Live counts and data quality overview for all spa listings."
       />
 
-      {/* ── Status & feature counts ─────────────────────────── */}
+      {/* ── All stat cards in one unified grid ──────────────── */}
       <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          Listings
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <StatCard
             label="Total spas"
             value={stats.total}
@@ -41,7 +38,6 @@ export default async function AdminDashboardPage() {
           <StatCard
             label="Draft"
             value={stats.draft}
-            note="unpublished"
             href={"/admin/spas?status=draft" as Route}
             accent={stats.draft > 0 ? "warning" : undefined}
           />
@@ -56,53 +52,43 @@ export default async function AdminDashboardPage() {
             value={stats.featured}
           />
           <StatCard
-            label="Possible duplicates"
+            label="Duplicates"
             value={stats.possibleDuplicates}
-            note="flagged by name, phone, domain, or address"
             href={"/admin/duplicates" as Route}
             accent={stats.possibleDuplicates > 0 ? "warning" : undefined}
           />
-        </div>
-      </section>
-
-      {/* ── Missing field counts ─────────────────────────────── */}
-      <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-          Data gaps
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
-            label="Missing website"
+            label="No website"
             value={stats.missingWebsite}
             href={"/admin/spas?missing=website" as Route}
             accent={stats.missingWebsite > 0 ? "warning" : undefined}
           />
           <StatCard
-            label="Missing phone"
+            label="No phone"
             value={stats.missingPhone}
             href={"/admin/spas?missing=phone" as Route}
             accent={stats.missingPhone > 0 ? "warning" : undefined}
           />
           <StatCard
-            label="Missing address"
+            label="No address"
             value={stats.missingAddress}
             href={"/admin/spas?missing=address" as Route}
             accent={stats.missingAddress > 0 ? "warning" : undefined}
           />
           <StatCard
-            label="Missing hours"
+            label="No hours"
             value={stats.missingHours}
             href={"/admin/spas?missing=hours" as Route}
             accent={stats.missingHours > 0 ? "warning" : undefined}
           />
           <StatCard
-            label="Missing amenities"
+            label="No amenities"
             value={stats.missingAmenities}
             href={"/admin/spas?missing=amenities" as Route}
             accent={stats.missingAmenities > 0 ? "warning" : undefined}
           />
           <StatCard
-            label="Missing images"
+            label="No images"
             value={stats.missingImages}
             href={"/admin/spas?missing=images" as Route}
             accent={stats.missingImages > 0 ? "danger" : undefined}
