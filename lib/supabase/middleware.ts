@@ -55,13 +55,20 @@ export async function updateSession(request: NextRequest) {
   // ── Authenticated: fetch role from profiles ──────────────────
   // The anon client runs as the authenticated user, so RLS
   // "users can read own profile" allows this read.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const role = profile?.role as string | undefined;
+  // If the profiles table doesn't exist yet (pre-migration), fall back
+  // to treating any authenticated user as admin so the site stays usable.
+  let role: string | undefined;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    role = profile?.role as string | undefined;
+  } catch {
+    // profiles table not yet created — fail open
+    role = "admin";
+  }
   const isAdmin = role === "admin";
   const isOwner = role === "owner";
 

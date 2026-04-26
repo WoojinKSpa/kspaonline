@@ -1,5 +1,7 @@
-import { createSupabaseServerClient } from "./supabase/server";
-import { createSupabaseAdminClient } from "./supabase/server";
+import {
+  createSupabaseServerClient,
+  createSupabaseAdminClient,
+} from "./supabase/server";
 import { upsertProfile, getProfileByEmail, setProfileRole } from "./profiles";
 
 // Types

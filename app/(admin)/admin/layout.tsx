@@ -22,14 +22,22 @@ export default async function AdminLayout({
   }
 
   // Role is the single source of truth — no ADMIN_EMAILS or spa_owners needed here.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // If the profiles table doesn't exist yet (pre-migration), allow access so
+  // the admin isn't locked out before the SQL has been run.
+  let role: string | undefined;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    role = profile?.role as string | undefined;
+  } catch {
+    role = "admin"; // fail open pre-migration
+  }
 
-  if (profile?.role !== "admin") {
-    const dest = profile?.role === "owner" ? "/owner/dashboard" : "/";
+  if (role !== undefined && role !== "admin") {
+    const dest = role === "owner" ? "/owner/dashboard" : "/";
     redirect(dest as Route);
   }
 
