@@ -6,7 +6,6 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/auth-helpers";
 
 export default async function AdminLayout({
   children,
@@ -22,22 +21,16 @@ export default async function AdminLayout({
     redirect("/login?redirectTo=/admin" as Route);
   }
 
-  // If this email owns a spa, they are an owner — never grant admin access,
-  // even if ADMIN_EMAILS is unconfigured (fail-open).
-  const { data: ownerRow } = await supabase
-    .from("spa_owners")
-    .select("id")
-    .eq("email", user.email ?? "")
-    .limit(1)
-    .maybeSingle();
+  // Role is the single source of truth — no ADMIN_EMAILS or spa_owners needed here.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
-  if (ownerRow) {
-    redirect("/owner/dashboard" as Route);
-  }
-
-  if (!isAdminEmail(user.email)) {
-    // ADMIN_EMAILS is configured and this email isn't in the list.
-    redirect("/owner/dashboard" as Route);
+  if (profile?.role !== "admin") {
+    const dest = profile?.role === "owner" ? "/owner/dashboard" : "/";
+    redirect(dest as Route);
   }
 
   return (
@@ -45,7 +38,7 @@ export default async function AdminLayout({
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            Protected workspace
+            Admin
           </p>
           <p className="mt-2 text-sm text-muted-foreground">{user.email}</p>
         </div>

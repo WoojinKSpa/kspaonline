@@ -1,4 +1,6 @@
 import { createSupabaseServerClient } from "./supabase/server";
+import { createSupabaseAdminClient } from "./supabase/server";
+import { upsertProfile, getProfileByEmail, setProfileRole } from "./profiles";
 
 // Types
 export type ClaimRequest = {
@@ -190,6 +192,12 @@ export async function approveClaim(
     return { success: false, error: ownerError.message };
   }
 
+  // Sync profiles.role → 'owner' for this email (if they have an auth account).
+  const profile = await getProfileByEmail(owner_email);
+  if (profile && profile.role !== "admin") {
+    await setProfileRole(profile.id, "owner");
+  }
+
   return { success: true };
 }
 
@@ -221,6 +229,32 @@ export async function revokeSpaOwner(
 
   if (claimError) {
     return { success: false, error: claimError.message };
+  }
+
+  // Sync profiles.role back to 'user' for the former owner.
+  // Find their email from the claim rows for this spa.
+  const adminClient = createSupabaseAdminClient();
+  const { data: claimRow } = await adminClient
+    .from("spa_claim_requests")
+    .select("requester_email")
+    .eq("spa_id", spa_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (claimRow?.requester_email) {
+    const profile = await getProfileByEmail(claimRow.requester_email);
+    if (profile && profile.role === "owner") {
+      // Only demote if they don't own another spa
+      const { data: otherSpas } = await adminClient
+        .from("spa_owners")
+        .select("id")
+        .eq("email", claimRow.requester_email)
+        .limit(1);
+      if (!otherSpas || otherSpas.length === 0) {
+        await setProfileRole(profile.id, "user");
+      }
+    }
   }
 
   return { success: true };

@@ -5,59 +5,69 @@ import { createSupabaseServerClient } from "./supabase/server";
 // Get the authenticated user's email
 export async function getOwnerEmail(): Promise<string | null> {
   const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   return user?.email ?? null;
 }
 
-// Check if user owns a specific spa
-export async function checkOwnerAccess(
-  spa_id: string,
-  email: string
-): Promise<boolean> {
+/**
+ * Verify the current user is authenticated AND has role='owner' AND
+ * owns the given spa. Redirects if any check fails.
+ */
+export async function verifyOwnerAccess(spa_id: string): Promise<string> {
   const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+  if (!user) {
+    redirect("/owner/login" as Route);
+  }
+
+  // Check role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "owner") {
+    redirect("/owner/login" as Route);
+  }
+
+  // Check spa ownership
+  const { data: ownerRow } = await supabase
     .from("spa_owners")
     .select("id")
     .eq("spa_id", spa_id)
-    .eq("email", email)
+    .eq("email", user.email ?? "")
     .single();
 
-  if (error) {
-    return false;
-  }
-
-  return !!data;
-}
-
-// Verify owner access and throw redirect if not authorized
-export async function verifyOwnerAccess(spa_id: string): Promise<string> {
-  const email = await getOwnerEmail();
-
-  if (!email) {
-    redirect("/owner/login" as Route);
-  }
-
-  const hasAccess = await checkOwnerAccess(spa_id, email);
-
-  if (!hasAccess) {
+  if (!ownerRow) {
     redirect("/owner/dashboard?error=You+do+not+own+this+spa" as Route);
   }
 
-  return email;
+  return user.email!;
 }
 
-// Verify owner is authenticated
+/**
+ * Verify the current user is authenticated AND has role='owner'.
+ * Redirects to /owner/login if not.
+ */
 export async function verifyOwnerAuthenticated(): Promise<string> {
-  const email = await getOwnerEmail();
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!email) {
+  if (!user) {
     redirect("/owner/login" as Route);
   }
 
-  return email;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "owner") {
+    redirect("/owner/login" as Route);
+  }
+
+  return user.email!;
 }

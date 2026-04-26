@@ -2,7 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
-import { isAdminEmail } from "@/lib/auth-helpers";
 
 type MiddlewareCookieToSet = {
   name: string;
@@ -11,9 +10,7 @@ type MiddlewareCookieToSet = {
 };
 
 export async function updateSession(request: NextRequest) {
-  const response = NextResponse.next({
-    request,
-  });
+  const response = NextResponse.next({ request });
 
   const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
     cookies: {
@@ -34,53 +31,54 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isOwnerRoute = pathname.startsWith("/owner") && pathname !== "/owner/login";
-  const isAdminLoginRoute = pathname === "/login";
-  const isOwnerLoginRoute = pathname === "/owner/login";
+  const isAdminRoute     = pathname.startsWith("/admin");
+  const isOwnerRoute     = pathname.startsWith("/owner") && pathname !== "/owner/login";
+  const isAdminLogin     = pathname === "/login";
+  const isOwnerLogin     = pathname === "/owner/login";
 
-  // Unauthenticated guards
-  if (isAdminRoute && !user) {
+  // ── Unauthenticated guards ───────────────────────────────────
+  if (!user) {
+    if (isAdminRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
+    if (isOwnerRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/owner/login";
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
+
+  // ── Authenticated: fetch role from profiles ──────────────────
+  // The anon client runs as the authenticated user, so RLS
+  // "users can read own profile" allows this read.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const role = profile?.role as string | undefined;
+  const isAdmin = role === "admin";
+  const isOwner = role === "owner";
+
+  // Block owners (and everyone else) from /admin
+  if (isAdminRoute && !isAdmin) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirectTo", pathname);
+    url.pathname = isOwner ? "/owner/dashboard" : "/";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
-  if (isOwnerRoute && !user) {
+  // Redirect away from login pages for already-authenticated users
+  if (isAdminLogin || isOwnerLogin) {
     const url = request.nextUrl.clone();
-    url.pathname = "/owner/login";
+    url.pathname = isAdmin ? "/admin" : isOwner ? "/owner/dashboard" : "/";
+    url.search = "";
     return NextResponse.redirect(url);
-  }
-
-  // Authenticated: determine role by checking spa_owners first (owners are
-  // never admins), then fall back to ADMIN_EMAILS allowlist.
-  if (user) {
-    const { data: ownerRow } = await supabase
-      .from("spa_owners")
-      .select("id")
-      .eq("email", user.email ?? "")
-      .limit(1)
-      .maybeSingle();
-
-    const isOwner = !!ownerRow;
-    const isAdmin = !isOwner && isAdminEmail(user.email);
-
-    // Block owners from /admin
-    if (isOwner && isAdminRoute) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/owner/dashboard";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
-
-    // Redirect away from login pages for authenticated users
-    if (isAdminLoginRoute || isOwnerLoginRoute) {
-      const url = request.nextUrl.clone();
-      url.pathname = isAdmin ? "/admin" : "/owner/dashboard";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
   }
 
   return response;
