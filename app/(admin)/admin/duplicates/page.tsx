@@ -29,14 +29,13 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
       <PageIntro
         eyebrow="Admin"
         title="Duplicate detection"
-        description="Listings that share a name, phone number, website domain, or address. Select which to keep, then merge."
+        description="Listings that share a name, phone number, website domain, or address. Select the one to keep — the others will be permanently deleted."
       />
 
       {/* Success / error banners */}
       {mergedCount !== null && mergedCount > 0 && (
         <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          {mergedCount} duplicate listing{mergedCount !== 1 ? "s" : ""} deleted
-          successfully.
+          {mergedCount} duplicate listing{mergedCount !== 1 ? "s" : ""} permanently deleted.
         </div>
       )}
       {error && (
@@ -58,7 +57,7 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
           <p className="text-sm text-muted-foreground">
             {totalFlagged} listing{totalFlagged !== 1 ? "s" : ""} across{" "}
             {groups.length} group{groups.length !== 1 ? "s" : ""} may be
-            duplicates. Select which listing to keep in each group, then merge.
+            duplicates. Select which listing to keep — the others will be permanently deleted.
           </p>
 
           <div className="flex flex-col gap-6">
@@ -178,7 +177,7 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
                       </table>
                     </div>
 
-                    {/* Merge footer */}
+                    {/* Action footer */}
                     <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border bg-secondary/20 px-4 py-3">
                       <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                         <input
@@ -195,7 +194,7 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
                         type="submit"
                         className="rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90"
                       >
-                        Merge — delete others
+                        Keep selected — delete others
                       </button>
                     </div>
                   </div>
