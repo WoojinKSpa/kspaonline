@@ -75,7 +75,8 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
               const groupIdsCsv = group.spas.map((s) => s.id).join(",");
 
               return (
-                <form key={idx} action={mergeDuplicatesAction}>
+                <div key={idx} className="flex flex-col">
+                <form action={mergeDuplicatesAction}>
                   {/* Hidden: all IDs in this group */}
                   <input type="hidden" name="group_ids" value={groupIdsCsv} />
 
@@ -222,6 +223,7 @@ export default async function AdminDuplicatesPage({ searchParams }: Props) {
                     </button>
                   </div>
                 </form>
+                </div>
               );
             })}
           </div>
