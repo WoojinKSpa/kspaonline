@@ -22,9 +22,21 @@ export default async function AdminLayout({
     redirect("/login?redirectTo=/admin" as Route);
   }
 
+  // If this email owns a spa, they are an owner — never grant admin access,
+  // even if ADMIN_EMAILS is unconfigured (fail-open).
+  const { data: ownerRow } = await supabase
+    .from("spa_owners")
+    .select("id")
+    .eq("email", user.email ?? "")
+    .limit(1)
+    .maybeSingle();
+
+  if (ownerRow) {
+    redirect("/owner/dashboard" as Route);
+  }
+
   if (!isAdminEmail(user.email)) {
-    // Authenticated but not an admin (e.g. an owner who magic-link'd in).
-    // Send them to their own dashboard.
+    // ADMIN_EMAILS is configured and this email isn't in the list.
     redirect("/owner/dashboard" as Route);
   }
 

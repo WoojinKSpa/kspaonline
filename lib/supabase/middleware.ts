@@ -53,12 +53,34 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated redirect-away from login pages
-  if (user && (isAdminLoginRoute || isOwnerLoginRoute)) {
-    const url = request.nextUrl.clone();
-    url.pathname = isAdminEmail(user.email) ? "/admin" : "/owner/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
+  // Authenticated: determine role by checking spa_owners first (owners are
+  // never admins), then fall back to ADMIN_EMAILS allowlist.
+  if (user) {
+    const { data: ownerRow } = await supabase
+      .from("spa_owners")
+      .select("id")
+      .eq("email", user.email ?? "")
+      .limit(1)
+      .maybeSingle();
+
+    const isOwner = !!ownerRow;
+    const isAdmin = !isOwner && isAdminEmail(user.email);
+
+    // Block owners from /admin
+    if (isOwner && isAdminRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/owner/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+
+    // Redirect away from login pages for authenticated users
+    if (isAdminLoginRoute || isOwnerLoginRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = isAdmin ? "/admin" : "/owner/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
