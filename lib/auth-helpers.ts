@@ -1,5 +1,3 @@
-import { headers } from "next/headers";
-
 /**
  * Returns true if the given email should be granted admin access.
  *
@@ -10,7 +8,8 @@ import { headers } from "next/headers";
  *  - Once ADMIN_EMAILS is set (comma-separated), only listed addresses
  *    pass; everyone else is routed to /owner/dashboard.
  *
- * Set ADMIN_EMAILS in Vercel / .env.local to enable role separation.
+ * NOTE: This function is intentionally free of any `next/headers` imports
+ * so it can be safely used in middleware (Edge Runtime).
  */
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -27,11 +26,17 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 /**
  * Resolve the site's absolute base URL from request headers, falling back to
  * the NEXT_PUBLIC_SITE_URL env var. Used for building magic-link redirect URLs.
+ *
+ * Uses `next/headers` — only safe in Server Components, Server Actions, and
+ * Route Handlers. Do NOT import this in middleware.
  */
 export async function getSiteOrigin(): Promise<string> {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
 
+  // Dynamic import keeps `next/headers` out of the module's static import graph,
+  // which would otherwise break Edge Runtime (middleware) consumers of this file.
+  const { headers } = await import("next/headers");
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";

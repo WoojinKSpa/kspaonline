@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { isAdminEmail } from "@/lib/auth-helpers";
 
 type MiddlewareCookieToSet = {
   name: string;
@@ -32,19 +33,30 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isLoginRoute = request.nextUrl.pathname === "/login";
+  const { pathname } = request.nextUrl;
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isOwnerRoute = pathname.startsWith("/owner") && pathname !== "/owner/login";
+  const isAdminLoginRoute = pathname === "/login";
+  const isOwnerLoginRoute = pathname === "/owner/login";
 
+  // Unauthenticated guards
   if (isAdminRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirectTo", request.nextUrl.pathname);
+    url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (isLoginRoute && user) {
+  if (isOwnerRoute && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = "/owner/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Authenticated redirect-away from login pages
+  if (user && (isAdminLoginRoute || isOwnerLoginRoute)) {
+    const url = request.nextUrl.clone();
+    url.pathname = isAdminEmail(user.email) ? "/admin" : "/owner/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }
