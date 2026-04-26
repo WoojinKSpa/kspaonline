@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { isAdminEmail } from "@/lib/auth-helpers";
 
 type MiddlewareCookieToSet = {
   name: string;
@@ -31,10 +32,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAdminRoute     = pathname.startsWith("/admin");
-  const isOwnerRoute     = pathname.startsWith("/owner") && pathname !== "/owner/login";
-  const isAdminLogin     = pathname === "/login";
-  const isOwnerLogin     = pathname === "/owner/login";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isOwnerRoute = pathname.startsWith("/owner") && pathname !== "/owner/login";
+  const isAdminLogin = pathname === "/login";
+  const isOwnerLogin = pathname === "/owner/login";
 
   // ── Unauthenticated guards ───────────────────────────────────
   if (!user) {
@@ -53,10 +54,6 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ── Authenticated: fetch role from profiles ──────────────────
-  // The anon client runs as the authenticated user, so RLS
-  // "users can read own profile" allows this read.
-  // If the profiles table doesn't exist yet (pre-migration), fall back
-  // to treating any authenticated user as admin so the site stays usable.
   let role: string | undefined;
   try {
     const { data: profile } = await supabase
@@ -66,24 +63,36 @@ export async function updateSession(request: NextRequest) {
       .single();
     role = profile?.role as string | undefined;
   } catch {
-    // profiles table not yet created — fail open
-    role = "admin";
+    // profiles table not yet created — will be set by loginAction
   }
-  const isAdmin = role === "admin";
+
+  // Fall back to ADMIN_EMAILS if profile role isn't set yet (bootstrap path).
+  // Once loginAction runs, it writes 'admin' to profiles and this is no
+  // longer needed.
+  const isAdmin = role === "admin" || (!role && isAdminEmail(user.email));
   const isOwner = role === "owner";
 
-  // Block owners (and everyone else) from /admin
-  if (isAdminRoute && !isAdmin) {
+  // Owners are always blocked from /admin — hard rule.
+  if (isAdminRoute && isOwner) {
     const url = request.nextUrl.clone();
-    url.pathname = isOwner ? "/owner/dashboard" : "/";
+    url.pathname = "/owner/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
-  // Redirect away from login pages for already-authenticated users
-  if (isAdminLogin || isOwnerLogin) {
+  // Only redirect away from login pages when role is already established.
+  // Users with role='user' or no profile yet can still reach /login to
+  // trigger the loginAction bootstrap (which upgrades them to admin/owner).
+  if (isAdminLogin && isAdmin) {
     const url = request.nextUrl.clone();
-    url.pathname = isAdmin ? "/admin" : isOwner ? "/owner/dashboard" : "/";
+    url.pathname = "/admin";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (isOwnerLogin && isOwner) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/owner/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }

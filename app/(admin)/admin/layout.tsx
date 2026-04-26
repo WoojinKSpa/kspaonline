@@ -6,6 +6,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/auth-helpers";
 
 export default async function AdminLayout({
   children,
@@ -36,7 +37,10 @@ export default async function AdminLayout({
     role = "admin"; // fail open pre-migration
   }
 
-  if (role !== undefined && role !== "admin") {
+  // Fall back to ADMIN_EMAILS if profile isn't set yet (bootstrap path).
+  const effectiveIsAdmin = role === "admin" || (!role && isAdminEmail(user.email));
+
+  if (!effectiveIsAdmin) {
     const dest = role === "owner" ? "/owner/dashboard" : "/";
     redirect(dest as Route);
   }
