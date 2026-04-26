@@ -4,25 +4,25 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { upsertProfile } from "@/lib/profiles";
 
 /**
- * Handles the redirect from a Supabase magic-link email.
+ * Handles the redirect from a Supabase email confirmation or magic-link.
  *
  * Flow:
  *   1. Exchange the `code` query param for a session.
  *   2. Look up the now-authenticated user's profile (role).
- *   3. If they're in spa_owners but not yet role='owner', upgrade them.
- *   4. Route by role:
+ *   3. Route by role:
  *        admin  → /admin
- *        owner  → /owner/dashboard
- *        others → signed out, redirected home with error
+ *        owner  → /owner/dashboard (or `next` param)
+ *        user   → /account (or `next` param)
+ *   4. If the user is in spa_owners but role isn't 'owner' yet, upgrade them.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/owner/dashboard";
+  const next = searchParams.get("next");
 
   if (!code) {
     return NextResponse.redirect(
-      `${origin}/owner/login?error=${encodeURIComponent(
+      `${origin}/signin?error=${encodeURIComponent(
         "Missing sign-in code. Please request a new link."
       )}`
     );
@@ -33,15 +33,17 @@ export async function GET(request: NextRequest) {
 
   if (exchangeError) {
     return NextResponse.redirect(
-      `${origin}/owner/login?error=${encodeURIComponent(exchangeError.message)}`
+      `${origin}/signin?error=${encodeURIComponent(exchangeError.message)}`
     );
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user?.email) {
     return NextResponse.redirect(
-      `${origin}/owner/login?error=${encodeURIComponent(
+      `${origin}/signin?error=${encodeURIComponent(
         "Sign-in succeeded but no email was returned."
       )}`
     );
@@ -56,6 +58,7 @@ export async function GET(request: NextRequest) {
 
   const role = profile?.role as string | undefined;
 
+  // Admins always go to /admin.
   if (role === "admin") {
     return NextResponse.redirect(`${origin}/admin`);
   }
@@ -68,20 +71,16 @@ export async function GET(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  if (ownerRow) {
+  if (ownerRow || role === "owner") {
     // Ensure their profile reflects the owner role (idempotent).
     if (role !== "owner") {
       await upsertProfile(user.id, user.email, "owner");
     }
-    const safeNext = next.startsWith("/") ? next : "/owner/dashboard";
-    return NextResponse.redirect(`${origin}${safeNext}`);
+    const dest = next?.startsWith("/") ? next : "/owner/dashboard";
+    return NextResponse.redirect(`${origin}${dest}`);
   }
 
-  // Not an admin, not an approved owner — deny access.
-  await supabase.auth.signOut();
-  return NextResponse.redirect(
-    `${origin}/?error=${encodeURIComponent(
-      "Your email is not associated with an approved spa. Submit a claim first."
-    )}`
-  );
+  // Regular user (role='user' or freshly confirmed) — send to account page.
+  const dest = next?.startsWith("/") ? next : "/account";
+  return NextResponse.redirect(`${origin}${dest}`);
 }

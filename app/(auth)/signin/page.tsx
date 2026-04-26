@@ -1,60 +1,66 @@
 import type { Route } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { loginAction } from "@/app/(auth)/login/actions";
+import { signInAction } from "@/app/(auth)/signin/actions";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isAdminEmail } from "@/lib/auth-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Login",
+  title: "Sign in | KSpa.online",
 };
 
-type LoginPageProps = {
+type Props = {
   searchParams?: Promise<{
     error?: string;
-    redirectTo?: string;
+    message?: string;
   }>;
 };
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function SignInPage({ searchParams }: Props) {
+  // Redirect already-logged-in users
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (user) {
-    redirect((isAdminEmail(user.email) ? "/admin" : "/owner/dashboard") as Route);
+    redirect("/account" as Route);
   }
 
   const params = await searchParams;
-  const error = params?.error;
-  const redirectTo = params?.redirectTo ?? "/admin";
+  const error = params?.error ? decodeURIComponent(params.error) : null;
+  const message = params?.message ? decodeURIComponent(params.message) : null;
 
   return (
     <Container className="grid min-h-[calc(100svh-10rem)] place-items-center py-16">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>User Login</CardTitle>
+          <CardTitle>Sign in</CardTitle>
           <CardDescription>
-            Sign in to access your account.
+            Welcome back! Sign in to your KSpa.online account.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={loginAction} className="flex flex-col gap-5">
-            <input name="redirectTo" type="hidden" value={redirectTo} />
+          <form action={signInAction} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@kspa.online"
+                placeholder="you@example.com"
                 required
+                autoComplete="email"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -65,6 +71,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 type="password"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
             </div>
             {error ? (
@@ -72,7 +79,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 {error}
               </p>
             ) : null}
+            {message ? (
+              <p className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                {message}
+              </p>
+            ) : null}
             <Button type="submit">Sign in</Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/signup"
+                className="font-medium text-primary hover:underline"
+              >
+                Create one
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

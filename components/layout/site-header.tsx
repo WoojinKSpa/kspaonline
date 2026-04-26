@@ -2,9 +2,33 @@ import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/site";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Determine role for smart routing
+  let role: string | undefined;
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      role = profile?.role as string | undefined;
+    } catch {
+      // profiles table not yet available — ignore
+    }
+  }
+
+  const isAdmin = role === "admin";
+  const isOwner = role === "owner";
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/60 bg-background/80 backdrop-blur-xl">
       <Container className="flex h-20 items-center justify-between gap-4">
@@ -33,15 +57,36 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" className="hidden sm:inline-flex">
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin">Admin</Link>
-          </Button>
+          {user ? (
+            <>
+              {isAdmin && (
+                <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                  <Link href="/admin">Admin</Link>
+                </Button>
+              )}
+              {isOwner && (
+                <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                  <Link href="/owner/dashboard">Dashboard</Link>
+                </Button>
+              )}
+              {!isAdmin && !isOwner && (
+                <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                  <Link href="/account">My account</Link>
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                <Link href="/signin">Sign in</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Sign up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </Container>
     </header>
   );
 }
-
