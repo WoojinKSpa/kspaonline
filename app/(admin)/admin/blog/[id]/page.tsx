@@ -72,7 +72,7 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
           <div className="flex flex-col gap-2">
             <Label htmlFor="slug">Slug</Label>
             <Input id="slug" name="slug" defaultValue={post.slug} placeholder="auto-generated from title if blank" />
-            <p className="text-xs text-muted-foreground">URL: /guides/{post.slug}</p>
+            <p className="text-xs text-muted-foreground">URL: /{post.post_type === "blog" ? "blog" : post.post_type === "page" ? "p" : "guides"}/{post.slug}</p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -89,17 +89,18 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
             </select>
           </div>
 
+          {/* Current status shown as read-only badge — buttons below control draft vs published */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="status">Status</Label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={post.status}
-              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
+            <Label>Current status</Label>
+            <div className="flex h-11 items-center">
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                post.status === "published"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}>
+                {post.status === "published" ? "Published" : "Draft"}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2 md:col-span-2">
@@ -130,6 +131,7 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
             ← Back to posts
           </a>
           <div className="flex gap-3">
+            {/* Only these buttons carry name="status" — no select with the same name */}
             <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
             <Button type="submit" name="status" value="published">Publish</Button>
           </div>

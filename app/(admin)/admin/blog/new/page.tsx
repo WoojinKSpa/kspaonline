@@ -55,19 +55,6 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
             </select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="status">Status</Label>
-            <select
-              id="status"
-              name="status"
-              defaultValue="draft"
-              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-
           <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="excerpt">Excerpt</Label>
             <Textarea id="excerpt" name="excerpt" rows={2} placeholder="Short summary shown in listings and SEO descriptions…" maxLength={300} />
@@ -84,6 +71,7 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
             ← Back to posts
           </a>
           <div className="flex gap-3">
+            {/* name="status" only on buttons — no status select in this form to avoid collision */}
             <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
             <Button type="submit" name="status" value="published">Publish</Button>
           </div>
