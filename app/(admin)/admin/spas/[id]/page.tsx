@@ -18,6 +18,7 @@ import { listSpaImagesBySpaId } from "@/lib/spa-images";
 
 type AdminSpaEditPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
 };
 
 export async function generateMetadata({ params }: AdminSpaEditPageProps) {
@@ -40,8 +41,10 @@ const FIELD_LABELS: Record<string, string> = {
 
 export default async function AdminSpaEditPage({
   params,
+  searchParams,
 }: AdminSpaEditPageProps) {
   const { id } = await params;
+  const query = await searchParams;
   const spa = await getAdminSpaById(id);
 
   if (!spa) {
@@ -83,6 +86,12 @@ export default async function AdminSpaEditPage({
           </p>
         </div>
       )}
+
+      {query?.error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {decodeURIComponent(query.error)}
+        </div>
+      ) : null}
 
       <SpaImageManager
         logoAction={uploadSpaLogoAction.bind(null, spa.id, spa.slug)}

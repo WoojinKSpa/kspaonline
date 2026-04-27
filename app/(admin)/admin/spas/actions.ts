@@ -94,7 +94,12 @@ export async function uploadSpaLogoAction(
     redirect(`/admin/spas/${id}` as Route);
   }
 
-  await uploadSpaLogo(id, file);
+  try {
+    await uploadSpaLogo(id, file);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to upload logo.";
+    redirect(`/admin/spas/${id}?error=${encodeURIComponent(message)}` as Route);
+  }
 
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath(`/spas/${slug}` as Route);
@@ -115,7 +120,13 @@ export async function uploadSpaGalleryImagesAction(
     redirect(`/admin/spas/${id}` as Route);
   }
 
-  await uploadSpaGalleryImages(id, files);
+  try {
+    await uploadSpaGalleryImages(id, files);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to upload business photos.";
+    redirect(`/admin/spas/${id}?error=${encodeURIComponent(message)}` as Route);
+  }
 
   revalidatePath(`/admin/spas/${id}` as Route);
   revalidatePath(`/spas/${slug}` as Route);
