@@ -30,7 +30,7 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("blog_posts")
-    .select("id, title, slug, excerpt, status, published_at, created_at, updated_at")
+    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);

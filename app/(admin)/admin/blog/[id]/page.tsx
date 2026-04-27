@@ -131,9 +131,17 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
             ← Back to posts
           </a>
           <div className="flex gap-3">
-            {/* Only these buttons carry name="status" — no select with the same name */}
-            <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
-            <Button type="submit" name="status" value="published">Publish</Button>
+            {post.status === "published" ? (
+              <>
+                <Button type="submit" name="status" value="draft" variant="outline">Unpublish</Button>
+                <Button type="submit" name="status" value="published">Save changes</Button>
+              </>
+            ) : (
+              <>
+                <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
+                <Button type="submit" name="status" value="published">Publish</Button>
+              </>
+            )}
           </div>
         </div>
       </form>

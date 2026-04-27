@@ -65,12 +65,11 @@ export function RichTextEditor({
   placeholder = "Start typing…",
   minHeight = "min-h-[160px]",
 }: RichTextEditorProps) {
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Disable extensions we don't need
         code: false,
         codeBlock: false,
         blockquote: false,
@@ -83,7 +82,6 @@ export function RichTextEditor({
         class: cn(
           "prose prose-sm max-w-none focus:outline-none px-4 py-3",
           minHeight,
-          // Prose styles for the editor content
           "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5",
           "[&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold",
           "[&_strong]:font-semibold [&_em]:italic [&_u]:underline",
@@ -92,25 +90,35 @@ export function RichTextEditor({
       },
     },
     immediatelyRender: false,
-    onUpdate({ editor: e }) {
-      if (hiddenInputRef.current) {
-        hiddenInputRef.current.value = e.getHTML();
-      }
-    },
   });
 
-  // Sync initial editor HTML into the hidden input on mount
+  // Attach a 'formdata' listener to the parent <form>.
+  // This fires synchronously when the browser collects form data,
+  // guaranteeing the current editor HTML is included at submit time.
   useEffect(() => {
-    if (editor && hiddenInputRef.current) {
-      hiddenInputRef.current.value = editor.getHTML();
-    }
-  }, [editor]);
+    if (!editor) return;
+    const form = containerRef.current?.closest("form");
+    if (!form) return;
+
+    const handleFormData = (e: FormDataEvent) => {
+      // Remove any stale value from the hidden input, then inject the live HTML
+      e.formData.delete(name);
+      const html = editor.getHTML();
+      // Don't submit an empty paragraph as content
+      if (html && html !== "<p></p>") {
+        e.formData.append(name, html);
+      }
+    };
+
+    form.addEventListener("formdata", handleFormData);
+    return () => form.removeEventListener("formdata", handleFormData);
+  }, [editor, name]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
-      {/* Hidden input carries the HTML value on form submit — ref keeps it in sync */}
-      <input type="hidden" name={name} defaultValue={defaultValue ?? ""} ref={hiddenInputRef} />
-
+    <div
+      ref={containerRef}
+      className="overflow-hidden rounded-2xl border border-input bg-background focus-within:ring-2 focus-within:ring-ring"
+    >
       {/* Toolbar + editor — only shown once Tiptap has initialised client-side */}
       {editor ? (
         <>
