@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 export type BlogPostStatus = "draft" | "published";
+export type BlogPostType = "guide" | "blog" | "page";
 
 export type BlogPost = {
   id: string;
@@ -9,6 +10,7 @@ export type BlogPost = {
   excerpt: string | null;
   content: string | null;
   status: BlogPostStatus;
+  post_type: BlogPostType;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -53,6 +55,7 @@ export async function createBlogPost(input: {
   excerpt: string | null;
   content: string | null;
   status: BlogPostStatus;
+  post_type: BlogPostType;
 }): Promise<BlogPost> {
   const supabase = createSupabaseAdminClient();
   const slug = input.slug ? toSlug(input.slug) : toSlug(input.title);
@@ -65,6 +68,7 @@ export async function createBlogPost(input: {
       excerpt: input.excerpt,
       content: input.content,
       status: input.status,
+      post_type: input.post_type,
       published_at: input.status === "published" ? new Date().toISOString() : null,
     })
     .select("*")
@@ -82,6 +86,7 @@ export async function updateBlogPost(
     excerpt: string | null;
     content: string | null;
     status: BlogPostStatus;
+    post_type: BlogPostType;
     previousStatus: BlogPostStatus;
     previousPublishedAt: string | null;
   }
@@ -102,6 +107,7 @@ export async function updateBlogPost(
       excerpt: input.excerpt,
       content: input.content,
       status: input.status,
+      post_type: input.post_type,
       published_at,
       updated_at: new Date().toISOString(),
     })
@@ -125,8 +131,27 @@ export async function listPublishedBlogPosts(limit?: number): Promise<BlogPost[]
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("blog_posts")
-    .select("id, title, slug, excerpt, status, published_at, created_at, updated_at")
+    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
     .eq("status", "published")
+    .order("published_at", { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as BlogPost[];
+}
+
+export async function listPublishedBlogPostsByType(
+  type: BlogPostType,
+  limit?: number
+): Promise<BlogPost[]> {
+  const supabase = createSupabaseAdminClient();
+  let query = supabase
+    .from("blog_posts")
+    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
+    .eq("status", "published")
+    .eq("post_type", type)
     .order("published_at", { ascending: false });
 
   if (limit) query = query.limit(limit);

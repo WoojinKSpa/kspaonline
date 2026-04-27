@@ -12,6 +12,12 @@ import { getBlogPostById } from "@/lib/blog-posts";
 
 export const metadata = { title: "Edit Post | Admin" };
 
+function publicUrlForPost(type: string, slug: string): string {
+  if (type === "blog") return `/blog/${slug}`;
+  if (type === "page") return `/p/${slug}`;
+  return `/guides/${slug}`;
+}
+
 type Props = {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ error?: string; success?: string }>;
@@ -43,7 +49,7 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
             <>
               {" "}
               <a
-                href={`/guides/${post.slug}`}
+                href={publicUrlForPost(post.post_type, post.slug)}
                 target="_blank"
                 className="font-medium underline"
               >
@@ -67,6 +73,20 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
             <Label htmlFor="slug">Slug</Label>
             <Input id="slug" name="slug" defaultValue={post.slug} placeholder="auto-generated from title if blank" />
             <p className="text-xs text-muted-foreground">URL: /guides/{post.slug}</p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="post_type">Type</Label>
+            <select
+              id="post_type"
+              name="post_type"
+              defaultValue={post.post_type}
+              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="guide">Guide</option>
+              <option value="blog">Blog post</option>
+              <option value="page">Page</option>
+            </select>
           </div>
 
           <div className="flex flex-col gap-2">

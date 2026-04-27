@@ -1,0 +1,81 @@
+import type { Metadata } from "next";
+import type { Route } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+
+import { Container } from "@/components/layout/container";
+import { getPublishedBlogPostBySlug } from "@/lib/blog-posts";
+
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPublishedBlogPostBySlug(slug);
+  if (!post || post.post_type !== "blog") return { title: "Not Found" };
+
+  return {
+    title: `${post.title} | KSpa Online`,
+    description: post.excerpt ?? undefined,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      type: "article",
+      publishedTime: post.published_at ?? undefined,
+    },
+  };
+}
+
+export default async function BlogPostPage({ params }: Props) {
+  const { slug } = await params;
+  const post = await getPublishedBlogPostBySlug(slug);
+  if (!post || post.post_type !== "blog") notFound();
+
+  return (
+    <div className="pb-20">
+      <Container className="max-w-3xl py-12">
+        <Link
+          href={"/blog" as Route}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          All posts
+        </Link>
+
+        <article className="mt-8">
+          <header className="mb-8">
+            <p className="text-xs font-medium uppercase tracking-widest text-primary">Blog</p>
+            <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">
+              {post.title}
+            </h1>
+            {post.excerpt && (
+              <p className="mt-5 text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
+            )}
+            {post.published_at && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Published{" "}
+                {new Date(post.published_at).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            <div className="mt-6 border-t border-border" />
+          </header>
+
+          {post.content ? (
+            <div
+              className="article-prose"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          ) : (
+            <p className="text-muted-foreground">Content coming soon.</p>
+          )}
+        </article>
+      </Container>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getFirstGalleryImageUrls } from "@/lib/spa-images";
-import { listPublishedBlogPosts } from "@/lib/blog-posts";
+import { listPublishedBlogPostsByType } from "@/lib/blog-posts";
 import type { BlogPost } from "@/lib/blog-posts";
 
 type FeaturedSpa = {
@@ -145,7 +145,7 @@ export default async function HomePage() {
   const [featuredSpas, directoryStats, recentPosts] = await Promise.all([
     getFeaturedSpas(),
     getDirectoryStats(),
-    listPublishedBlogPosts(3),
+    listPublishedBlogPostsByType("guide", 3),
   ]);
   const { countries, listingCount, states } = directoryStats;
 

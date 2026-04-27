@@ -10,6 +10,7 @@ import {
   getBlogPostById,
   updateBlogPost,
   type BlogPostStatus,
+  type BlogPostType,
 } from "@/lib/blog-posts";
 
 export async function createBlogPostAction(formData: FormData) {
@@ -18,11 +19,12 @@ export async function createBlogPostAction(formData: FormData) {
   const excerpt = (formData.get("excerpt") as string | null)?.trim() || null;
   const content = (formData.get("content") as string | null) || null;
   const status = (formData.get("status") as BlogPostStatus) ?? "draft";
+  const post_type = (formData.get("post_type") as BlogPostType) ?? "guide";
 
   if (!title) redirect("/admin/blog/new?error=Title+is+required" as Route);
 
   try {
-    const post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status });
+    const post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status, post_type });
     revalidatePath("/admin/blog" as Route);
     revalidatePath("/guides" as Route);
     redirect(`/admin/blog/${post.id}` as Route);
@@ -39,6 +41,7 @@ export async function updateBlogPostAction(formData: FormData) {
   const excerpt = (formData.get("excerpt") as string | null)?.trim() || null;
   const content = (formData.get("content") as string | null) || null;
   const status = (formData.get("status") as BlogPostStatus) ?? "draft";
+  const post_type = (formData.get("post_type") as BlogPostType) ?? "guide";
 
   if (!id || !title) redirect((`/admin/blog/${id}?error=Title+is+required`) as Route);
 
@@ -52,6 +55,7 @@ export async function updateBlogPostAction(formData: FormData) {
       excerpt,
       content,
       status,
+      post_type,
       previousStatus: existing.status,
       previousPublishedAt: existing.published_at,
     });

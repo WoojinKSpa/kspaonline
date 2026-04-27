@@ -52,6 +52,7 @@ export default async function AdminBlogPage({ searchParams }: Props) {
             <thead className="border-b border-border bg-secondary/30">
               <tr>
                 <th className="px-4 py-3 font-medium text-muted-foreground">Title</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground">Type</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground">Published</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground">Updated</th>
@@ -65,6 +66,9 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                     <Link href={(`/admin/blog/${post.id}`) as Route} className="hover:text-primary hover:underline">
                       {post.title}
                     </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <TypePill type={post.post_type} />
                   </td>
                   <td className="px-4 py-3">
                     <StatusPill status={post.status} />
@@ -83,7 +87,11 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                         Edit
                       </Link>
                       {post.status === "published" && (
-                        <Link href={(`/guides/${post.slug}`) as Route} target="_blank" className="text-sm text-muted-foreground hover:text-foreground">
+                        <Link
+                          href={(publicUrl(post.post_type, post.slug)) as Route}
+                          target="_blank"
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                        >
                           View ↗
                         </Link>
                       )}
@@ -106,6 +114,26 @@ export default async function AdminBlogPage({ searchParams }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+function publicUrl(type: string, slug: string): string {
+  if (type === "blog") return `/blog/${slug}`;
+  if (type === "page") return `/p/${slug}`;
+  return `/guides/${slug}`;
+}
+
+function TypePill({ type }: { type: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    guide:  { label: "Guide",     className: "bg-blue-100 text-blue-800" },
+    blog:   { label: "Blog post", className: "bg-purple-100 text-purple-800" },
+    page:   { label: "Page",      className: "bg-gray-100 text-gray-700" },
+  };
+  const { label, className } = map[type] ?? map.guide;
+  return (
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>
+      {label}
+    </span>
   );
 }
 

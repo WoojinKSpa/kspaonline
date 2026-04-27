@@ -42,6 +42,20 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
           </div>
 
           <div className="flex flex-col gap-2">
+            <Label htmlFor="post_type">Type</Label>
+            <select
+              id="post_type"
+              name="post_type"
+              defaultValue="guide"
+              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="guide">Guide</option>
+              <option value="blog">Blog post</option>
+              <option value="page">Page</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
             <Label htmlFor="status">Status</Label>
             <select
               id="status"
