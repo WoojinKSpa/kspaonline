@@ -25,7 +25,7 @@ type Props = {
   }>;
 };
 
-const VALID_STATUSES = new Set(["draft", "published", "archived"]);
+const VALID_STATUSES = new Set(["draft", "published", "archived", "pending"]);
 const VALID_MISSING = new Set(["website", "phone", "address", "hours", "amenities", "images"]);
 const VALID_SORTS = new Set(["name", "quality_asc", "quality_desc"]);
 
@@ -200,14 +200,20 @@ export default async function AdminSpaListPage({ searchParams }: Props) {
               {filtered.map((spa) => {
                 const quality = calculateQualityScore(spa, spa.hasImages);
                 const missingFields = getMissingFields(quality.breakdown);
-                const otherStatuses: Array<{ status: SpaStatus; label: string }> = [
-                  { status: "published", label: "Publish" },
-                  { status: "draft", label: "Draft" },
-                  { status: "archived", label: "Archive" },
-                ].filter((s) => s.status !== spa.status) as Array<{
-                  status: SpaStatus;
-                  label: string;
-                }>;
+                // Pending submissions get Approve/Reject; others get standard transitions
+                const otherStatuses: Array<{ status: SpaStatus; label: string }> =
+                  spa.status === "pending"
+                    ? [
+                        { status: "draft", label: "Approve" },
+                        { status: "archived", label: "Reject" },
+                      ]
+                    : (
+                        [
+                          { status: "published", label: "Publish" },
+                          { status: "draft", label: "Draft" },
+                          { status: "archived", label: "Archive" },
+                        ] as Array<{ status: SpaStatus; label: string }>
+                      ).filter((s) => s.status !== spa.status);
 
                 return (
                   <tr key={spa.id} className="border-b border-border last:border-b-0 hover:bg-secondary/20">
@@ -280,11 +286,15 @@ function StatusPill({ status }: { status: string }) {
       ? "bg-green-100 text-green-800"
       : status === "draft"
         ? "bg-yellow-100 text-yellow-800"
-        : "bg-gray-100 text-gray-600";
+        : status === "pending"
+          ? "bg-orange-100 text-orange-800"
+          : "bg-gray-100 text-gray-600";
+
+  const label = status === "pending" ? "pending review" : status;
 
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${styles}`}>
-      {status}
+      {label}
     </span>
   );
 }

@@ -63,6 +63,12 @@ export default async function AdminDashboardPage({ searchParams }: Props) {
             accent="muted"
           />
           <StatCard
+            label="Pending review"
+            value={stats.pending}
+            href={"/admin/spas?status=pending" as Route}
+            accent={stats.pending > 0 ? "danger" : undefined}
+          />
+          <StatCard
             label="Featured"
             value={stats.featured}
           />

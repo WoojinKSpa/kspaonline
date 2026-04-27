@@ -16,6 +16,7 @@ type Props = {
 
 const STATUS_TABS = [
   { value: "", label: "All" },
+  { value: "pending", label: "Pending review" },
   { value: "published", label: "Published" },
   { value: "draft", label: "Draft" },
   { value: "archived", label: "Archived" },

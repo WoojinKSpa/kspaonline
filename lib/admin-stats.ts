@@ -14,6 +14,7 @@ export type AdminStats = {
   published: number;
   draft: number;
   archived: number;
+  pending: number;
   featured: number;
   missingWebsite: number;
   missingPhone: number;
@@ -64,6 +65,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     published: spas.filter((s) => s.status === "published").length,
     draft: spas.filter((s) => s.status === "draft").length,
     archived: spas.filter((s) => s.status === "archived").length,
+    pending: spas.filter((s) => s.status === "pending").length,
     featured: spas.filter((s) => s.is_featured).length,
     missingWebsite: spas.filter((s) => !s.website && !s.business_website).length,
     missingPhone: spas.filter((s) => !s.phone && !s.business_phone).length,

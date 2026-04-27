@@ -1,7 +1,7 @@
 import { normalizeAmenitySelection } from "@/lib/amenities";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
-export type SpaStatus = "draft" | "published" | "archived";
+export type SpaStatus = "draft" | "published" | "archived" | "pending";
 
 export type AdminSpa = {
   id: string;
@@ -346,7 +346,7 @@ function buildSpaPayload(formData: FormData): SpaPayload {
   const city = rawCity.trim();
   const status = rawStatus as SpaStatus;
 
-  if (!name || !city || !["draft", "published", "archived"].includes(status)) {
+  if (!name || !city || !["draft", "published", "archived", "pending"].includes(status)) {
     throw new Error("Invalid spa form data.");
   }
 
