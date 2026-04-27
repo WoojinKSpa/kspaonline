@@ -107,6 +107,18 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
           </div>
 
           <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="featured_image_url">Featured image URL</Label>
+            <Input
+              id="featured_image_url"
+              name="featured_image_url"
+              type="url"
+              defaultValue={post.featured_image_url ?? ""}
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-xs text-muted-foreground">Paste any image URL — shown as a hero on the post and as a thumbnail in listings.</p>
+          </div>
+
+          <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="excerpt">Excerpt</Label>
             <Textarea
               id="excerpt"

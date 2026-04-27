@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.excerpt ?? undefined,
       type: "article",
       publishedTime: post.published_at ?? undefined,
+      images: post.featured_image_url ? [{ url: post.featured_image_url }] : undefined,
     },
   };
 }
@@ -44,7 +46,20 @@ export default async function BlogPostPage({ params }: Props) {
           All posts
         </Link>
 
-        <article className="mt-8">
+        {post.featured_image_url && (
+          <div className="relative mt-8 h-64 w-full overflow-hidden rounded-2xl sm:h-80 lg:h-96">
+            <Image
+              src={post.featured_image_url}
+              alt={post.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="(min-width: 1024px) 768px, 100vw"
+            />
+          </div>
+        )}
+
+        <article className={post.featured_image_url ? "mt-10" : "mt-8"}>
           <header className="mb-8">
             <p className="text-xs font-medium uppercase tracking-widest text-primary">Blog</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">

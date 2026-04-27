@@ -22,6 +22,7 @@ function extractPostFields(formData: FormData) {
     excerpt: (formData.get("excerpt") as string | null)?.trim() || null,
     content: (formData.get("content") as string | null) || null,
     post_type: ((formData.get("post_type") as string | null) ?? "guide") as BlogPostType,
+    featured_image_url: (formData.get("featured_image_url") as string | null)?.trim() || null,
   };
 }
 
@@ -36,7 +37,7 @@ async function _createPost(formData: FormData, status: BlogPostStatus) {
   let errorMsg: string | null = null;
 
   try {
-    post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status, post_type });
+    post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status, post_type, featured_image_url });
   } catch (e) {
     errorMsg = e instanceof Error ? e.message : "Failed to create post";
   }
@@ -63,7 +64,7 @@ export async function createBlogPostAsPublishedAction(formData: FormData) {
 
 async function _updatePost(formData: FormData, status: BlogPostStatus) {
   const id = formData.get("id") as string;
-  const { title, slug, excerpt, content, post_type } = extractPostFields(formData);
+  const { title, slug, excerpt, content, post_type, featured_image_url } = extractPostFields(formData);
 
   if (!id || !title) redirect((`/admin/blog/${id}?error=Title+is+required`) as Route);
 
@@ -80,6 +81,7 @@ async function _updatePost(formData: FormData, status: BlogPostStatus) {
       content,
       status,
       post_type,
+      featured_image_url,
       previousStatus: existing.status,
       previousPublishedAt: existing.published_at,
     });

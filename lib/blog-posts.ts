@@ -11,6 +11,7 @@ export type BlogPost = {
   content: string | null;
   status: BlogPostStatus;
   post_type: BlogPostType;
+  featured_image_url: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -56,6 +57,7 @@ export async function createBlogPost(input: {
   content: string | null;
   status: BlogPostStatus;
   post_type: BlogPostType;
+  featured_image_url: string | null;
 }): Promise<BlogPost> {
   const supabase = createSupabaseAdminClient();
   const slug = input.slug ? toSlug(input.slug) : toSlug(input.title);
@@ -69,6 +71,7 @@ export async function createBlogPost(input: {
       content: input.content,
       status: input.status,
       post_type: input.post_type,
+      featured_image_url: input.featured_image_url,
       published_at: input.status === "published" ? new Date().toISOString() : null,
     })
     .select("*")
@@ -87,6 +90,7 @@ export async function updateBlogPost(
     content: string | null;
     status: BlogPostStatus;
     post_type: BlogPostType;
+    featured_image_url: string | null;
     previousStatus: BlogPostStatus;
     previousPublishedAt: string | null;
   }
@@ -108,6 +112,7 @@ export async function updateBlogPost(
       content: input.content,
       status: input.status,
       post_type: input.post_type,
+      featured_image_url: input.featured_image_url,
       published_at,
       updated_at: new Date().toISOString(),
     })

@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowRight, ExternalLink, MapPin, Search } from "lucide-react";
+import { ArrowRight, BookOpen, ExternalLink, MapPin, Search } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
@@ -370,24 +370,40 @@ export default async function HomePage() {
                 <Link
                   key={post.id}
                   href={(`/guides/${post.slug}`) as Route}
-                  className="group surface flex flex-col gap-4 p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
+                  className="group surface flex flex-col overflow-hidden shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
                 >
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-widest text-primary">
-                      Guide
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                  {/* Thumbnail */}
+                  {post.featured_image_url ? (
+                    <div className="relative h-44 w-full shrink-0 overflow-hidden">
+                      <Image
+                        src={post.featured_image_url}
+                        alt={post.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-32 w-full shrink-0 items-center justify-center bg-primary/5">
+                      <BookOpen className="size-8 text-primary/20" />
+                    </div>
+                  )}
+
+                  {/* Body */}
+                  <div className="flex flex-1 flex-col gap-3 p-6">
+                    <p className="text-xs font-medium uppercase tracking-widest text-primary">Guide</p>
+                    <h3 className="text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
                       {post.title}
                     </h3>
+                    {post.excerpt && (
+                      <p className="flex-1 text-sm leading-6 text-muted-foreground line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    )}
+                    <span className="text-sm font-medium text-primary group-hover:underline">
+                      Read guide →
+                    </span>
                   </div>
-                  {post.excerpt && (
-                    <p className="flex-1 text-sm leading-6 text-muted-foreground line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  )}
-                  <span className="text-sm font-medium text-primary group-hover:underline">
-                    Read guide →
-                  </span>
                 </Link>
               ))}
             </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -38,30 +39,46 @@ export default async function BlogPage() {
               <Link
                 key={post.id}
                 href={(`/blog/${post.slug}`) as Route}
-                className="group surface flex flex-col gap-4 p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
+                className="group surface flex flex-col overflow-hidden shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
               >
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-widest text-primary">
-                    Blog
-                  </p>
-                  <h2 className="mt-2 text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                {/* Thumbnail */}
+                {post.featured_image_url ? (
+                  <div className="relative h-48 w-full shrink-0 overflow-hidden">
+                    <Image
+                      src={post.featured_image_url}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-36 w-full shrink-0 items-center justify-center bg-primary/5">
+                    <BookOpen className="size-8 text-primary/20" />
+                  </div>
+                )}
+
+                {/* Body */}
+                <div className="flex flex-1 flex-col gap-3 p-6">
+                  <p className="text-xs font-medium uppercase tracking-widest text-primary">Blog</p>
+                  <h2 className="text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
                     {post.title}
                   </h2>
-                </div>
-                {post.excerpt && (
-                  <p className="flex-1 text-sm leading-6 text-muted-foreground">
-                    {post.excerpt}
+                  {post.excerpt && (
+                    <p className="flex-1 text-sm leading-6 text-muted-foreground line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {post.published_at
+                      ? new Date(post.published_at).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : null}
                   </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {post.published_at
-                    ? new Date(post.published_at).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                    : null}
-                </p>
+                </div>
               </Link>
             ))}
           </div>
