@@ -65,3 +65,47 @@ a {
   }
 }
 
+/* Article prose — used for blog/guide content rendered from rich-text HTML */
+.article-prose {
+  @apply text-base leading-7 text-foreground;
+}
+.article-prose h1 {
+  @apply mt-8 mb-4 text-3xl font-semibold leading-tight;
+}
+.article-prose h2 {
+  @apply mt-8 mb-3 text-2xl font-semibold leading-tight;
+}
+.article-prose h3 {
+  @apply mt-6 mb-2 text-xl font-semibold leading-snug;
+}
+.article-prose p {
+  @apply mb-5;
+}
+.article-prose ul {
+  @apply mb-5 ml-6 list-disc space-y-1;
+}
+.article-prose ol {
+  @apply mb-5 ml-6 list-decimal space-y-1;
+}
+.article-prose li {
+  @apply leading-7;
+}
+.article-prose strong {
+  @apply font-semibold;
+}
+.article-prose em {
+  @apply italic;
+}
+.article-prose u {
+  @apply underline;
+}
+.article-prose a {
+  @apply text-primary hover:underline;
+}
+.article-prose hr {
+  @apply my-8 border-border;
+}
+.article-prose blockquote {
+  @apply my-6 border-l-4 border-primary/30 pl-5 italic text-muted-foreground;
+}
+

@@ -1,0 +1,120 @@
+import type { Route } from "next";
+import { notFound } from "next/navigation";
+
+import { updateBlogPostAction } from "@/app/(admin)/admin/blog/actions";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import { PageIntro } from "@/components/layout/page-intro";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { getBlogPostById } from "@/lib/blog-posts";
+
+export const metadata = { title: "Edit Post | Admin" };
+
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string; success?: string }>;
+};
+
+export default async function EditBlogPostPage({ params, searchParams }: Props) {
+  const { id } = await params;
+  const qp = await searchParams;
+  const error = qp?.error ? decodeURIComponent(qp.error) : null;
+  const success = qp?.success === "1";
+
+  const post = await getBlogPostById(id);
+  if (!post) notFound();
+
+  return (
+    <div className="flex flex-col gap-8">
+      <PageIntro eyebrow="Admin · Blog" title="Edit post" description={`Editing: ${post.title}`} />
+
+      {error && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Post saved successfully.
+          {post.status === "published" && (
+            <>
+              {" "}
+              <a
+                href={`/guides/${post.slug}`}
+                target="_blank"
+                className="font-medium underline"
+              >
+                View live ↗
+              </a>
+            </>
+          )}
+        </div>
+      )}
+
+      <form action={updateBlogPostAction} className="flex flex-col gap-6">
+        <input type="hidden" name="id" value={post.id} />
+
+        <div className="grid gap-6 rounded-2xl border border-border bg-card p-6 md:grid-cols-2">
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="title">Title *</Label>
+            <Input id="title" name="title" defaultValue={post.title} required autoFocus />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="slug">Slug</Label>
+            <Input id="slug" name="slug" defaultValue={post.slug} placeholder="auto-generated from title if blank" />
+            <p className="text-xs text-muted-foreground">URL: /guides/{post.slug}</p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="status">Status</Label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={post.status}
+              className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <Label htmlFor="excerpt">Excerpt</Label>
+            <Textarea
+              id="excerpt"
+              name="excerpt"
+              rows={2}
+              defaultValue={post.excerpt ?? ""}
+              placeholder="Short summary shown in listings and SEO descriptions…"
+              maxLength={300}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-6">
+          <Label>Content</Label>
+          <RichTextEditor
+            name="content"
+            defaultValue={post.content ?? ""}
+            placeholder="Start writing your guide…"
+            minHeight="min-h-[400px]"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-6 py-4">
+          <a href={"/admin/blog" as Route} className="text-sm text-muted-foreground hover:text-foreground">
+            ← Back to posts
+          </a>
+          <div className="flex gap-3">
+            <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
+            <Button type="submit" name="status" value="published">Publish</Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}

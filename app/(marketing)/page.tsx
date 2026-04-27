@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getFirstGalleryImageUrls } from "@/lib/spa-images";
+import { listPublishedBlogPosts } from "@/lib/blog-posts";
+import type { BlogPost } from "@/lib/blog-posts";
 
 type FeaturedSpa = {
   id: string;
@@ -140,9 +142,10 @@ function SectionIntro({
 export default async function HomePage() {
   noStore();
 
-  const [featuredSpas, directoryStats] = await Promise.all([
+  const [featuredSpas, directoryStats, recentPosts] = await Promise.all([
     getFeaturedSpas(),
     getDirectoryStats(),
+    listPublishedBlogPosts(3),
   ]);
   const { countries, listingCount, states } = directoryStats;
 
@@ -320,6 +323,53 @@ export default async function HomePage() {
           )}
         </Container>
       </section>
+
+      {recentPosts.length > 0 && (
+        <section className="py-20 bg-secondary/30">
+          <Container>
+            <div className="flex items-end justify-between gap-4">
+              <SectionIntro
+                eyebrow="From the Guides"
+                title="Tips & Guides"
+                description="Expert advice to help you make the most of your Korean spa experience."
+              />
+              <Link
+                href={"/guides" as Route}
+                className="shrink-0 text-sm font-medium text-primary hover:underline"
+              >
+                All guides →
+              </Link>
+            </div>
+
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {recentPosts.map((post: BlogPost) => (
+                <Link
+                  key={post.id}
+                  href={(`/guides/${post.slug}`) as Route}
+                  className="group surface flex flex-col gap-4 p-6 shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
+                >
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-widest text-primary">
+                      Guide
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h3>
+                  </div>
+                  {post.excerpt && (
+                    <p className="flex-1 text-sm leading-6 text-muted-foreground line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <span className="text-sm font-medium text-primary group-hover:underline">
+                    Read guide →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
       <section className="pb-20">
         <Container className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">

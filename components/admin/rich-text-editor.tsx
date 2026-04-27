@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -65,6 +65,8 @@ export function RichTextEditor({
   placeholder = "Start typing…",
   minHeight = "min-h-[160px]",
 }: RichTextEditorProps) {
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -90,129 +92,124 @@ export function RichTextEditor({
       },
     },
     immediatelyRender: false,
+    onUpdate({ editor: e }) {
+      if (hiddenInputRef.current) {
+        hiddenInputRef.current.value = e.getHTML();
+      }
+    },
   });
 
-  // Keep the hidden input in sync with editor HTML
+  // Sync initial editor HTML into the hidden input on mount
   useEffect(() => {
-    if (!editor) return;
-    const input = document.querySelector<HTMLInputElement>(`input[name="${name}"]`);
-    if (input) input.value = editor.getHTML();
-
-    const updateInput = () => {
-      const el = document.querySelector<HTMLInputElement>(`input[name="${name}"]`);
-      if (el) el.value = editor.getHTML();
-    };
-
-    editor.on("update", updateInput);
-    return () => {
-      editor.off("update", updateInput);
-    };
-  }, [editor, name]);
-
-  if (!editor) return null;
+    if (editor && hiddenInputRef.current) {
+      hiddenInputRef.current.value = editor.getHTML();
+    }
+  }, [editor]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-input bg-background focus-within:ring-2 focus-within:ring-ring">
-      {/* Hidden input carries the HTML value on form submit */}
-      <input type="hidden" name={name} defaultValue={defaultValue ?? ""} />
+      {/* Hidden input carries the HTML value on form submit — ref keeps it in sync */}
+      <input type="hidden" name={name} defaultValue={defaultValue ?? ""} ref={hiddenInputRef} />
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-secondary/30 px-2 py-1.5">
-        {/* History */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          title="Undo"
-        >
-          <Undo className="size-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          title="Redo"
-        >
-          <Redo className="size-3.5" />
-        </ToolbarButton>
+      {/* Toolbar + editor — only shown once Tiptap has initialised client-side */}
+      {editor ? (
+        <>
+          <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-secondary/30 px-2 py-1.5">
+            {/* History */}
+            <ToolbarButton onClick={() => editor.chain().focus().undo().run()} title="Undo">
+              <Undo className="size-3.5" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().redo().run()} title="Redo">
+              <Redo className="size-3.5" />
+            </ToolbarButton>
 
-        <Divider />
+            <Divider />
 
-        {/* Headings */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor.isActive("heading", { level: 2 })}
-          title="Heading 2"
-        >
-          <Heading2 className="size-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          isActive={editor.isActive("heading", { level: 3 })}
-          title="Heading 3"
-        >
-          <Heading3 className="size-3.5" />
-        </ToolbarButton>
+            {/* Headings */}
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              isActive={editor.isActive("heading", { level: 2 })}
+              title="Heading 2"
+            >
+              <Heading2 className="size-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              isActive={editor.isActive("heading", { level: 3 })}
+              title="Heading 3"
+            >
+              <Heading3 className="size-3.5" />
+            </ToolbarButton>
 
-        <Divider />
+            <Divider />
 
-        {/* Inline formatting */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive("bold")}
-          title="Bold"
-        >
-          <Bold className="size-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive("italic")}
-          title="Italic"
-        >
-          <Italic className="size-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editor.isActive("underline")}
-          title="Underline"
-        >
-          <UnderlineIcon className="size-3.5" />
-        </ToolbarButton>
+            {/* Inline formatting */}
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              isActive={editor.isActive("bold")}
+              title="Bold"
+            >
+              <Bold className="size-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              isActive={editor.isActive("italic")}
+              title="Italic"
+            >
+              <Italic className="size-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              isActive={editor.isActive("underline")}
+              title="Underline"
+            >
+              <UnderlineIcon className="size-3.5" />
+            </ToolbarButton>
 
-        <Divider />
+            <Divider />
 
-        {/* Lists */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive("bulletList")}
-          title="Bullet list"
-        >
-          <List className="size-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive("orderedList")}
-          title="Numbered list"
-        >
-          <ListOrdered className="size-3.5" />
-        </ToolbarButton>
+            {/* Lists */}
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              isActive={editor.isActive("bulletList")}
+              title="Bullet list"
+            >
+              <List className="size-3.5" />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              isActive={editor.isActive("orderedList")}
+              title="Numbered list"
+            >
+              <ListOrdered className="size-3.5" />
+            </ToolbarButton>
 
-        <Divider />
+            <Divider />
 
-        {/* Divider line */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Divider line"
-        >
-          <Minus className="size-3.5" />
-        </ToolbarButton>
-      </div>
+            {/* Divider line */}
+            <ToolbarButton
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              title="Divider line"
+            >
+              <Minus className="size-3.5" />
+            </ToolbarButton>
+          </div>
 
-      {/* Editor area */}
-      {editor.isEmpty && (
-        <p className="pointer-events-none absolute px-4 py-3 text-sm text-muted-foreground/60">
+          <div className="relative">
+            {editor.isEmpty && (
+              <p className="pointer-events-none absolute px-4 py-3 text-sm text-muted-foreground/60">
+                {placeholder}
+              </p>
+            )}
+            <EditorContent editor={editor} />
+          </div>
+        </>
+      ) : (
+        /* Skeleton shown during SSR / before hydration */
+        <div className={cn("px-4 py-3 text-sm text-muted-foreground/60", minHeight)}>
           {placeholder}
-        </p>
+        </div>
       )}
-      <div className="relative">
-        <EditorContent editor={editor} />
-      </div>
     </div>
   );
 }
