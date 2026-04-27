@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/site";
 
 export async function SiteHeader() {
@@ -12,11 +12,12 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Determine role for smart routing
+  // Determine role using admin client to bypass RLS reliably
   let role: string | undefined;
   if (user) {
     try {
-      const { data: profile } = await supabase
+      const adminClient = createSupabaseAdminClient();
+      const { data: profile } = await adminClient
         .from("profiles")
         .select("role")
         .eq("id", user.id)

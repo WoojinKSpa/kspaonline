@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "My Account | KSpa.online",
@@ -42,11 +42,12 @@ export default async function AccountPage({ searchParams }: Props) {
   const success = params?.success ?? null;
   const error = params?.error ? decodeURIComponent(params.error) : null;
 
-  // Fetch profile (role + display_name)
+  // Fetch profile using admin client to bypass RLS reliably
   let role: string | null = null;
   let displayName: string | null = null;
   try {
-    const { data: profile } = await supabase
+    const adminClient = createSupabaseAdminClient();
+    const { data: profile } = await adminClient
       .from("profiles")
       .select("role, display_name")
       .eq("id", user.id)

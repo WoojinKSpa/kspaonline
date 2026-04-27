@@ -4,7 +4,7 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function signOutAction() {
   const supabase = await createSupabaseServerClient();
@@ -22,7 +22,9 @@ export async function updateProfileAction(formData: FormData) {
     redirect("/signin" as Route);
   }
 
-  const { error } = await supabase
+  // Use admin client to bypass RLS for the update
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient
     .from("profiles")
     .update({ display_name: displayName || null, updated_at: new Date().toISOString() })
     .eq("id", user.id);
