@@ -46,19 +46,19 @@ export default async function EditBlogPostPage({ params, searchParams }: Props) 
       )}
 
       {success && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          Post saved successfully.
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <span>
+            {post.status === "published" ? "Post published and live." : "Draft saved."}
+          </span>
           {post.status === "published" && (
-            <>
-              {" "}
-              <a
-                href={publicUrlForPost(post.post_type, post.slug)}
-                target="_blank"
-                className="font-medium underline"
-              >
-                View live ↗
-              </a>
-            </>
+            <a
+              href={publicUrlForPost(post.post_type, post.slug)}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-xl border border-green-300 bg-white px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-50"
+            >
+              View live ↗
+            </a>
           )}
         </div>
       )}

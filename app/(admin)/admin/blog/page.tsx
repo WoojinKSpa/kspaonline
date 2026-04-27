@@ -90,9 +90,9 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                         <Link
                           href={(publicUrl(post.post_type, post.slug)) as Route}
                           target="_blank"
-                          className="text-sm text-muted-foreground hover:text-foreground"
+                          className="text-sm font-medium text-green-700 hover:underline"
                         >
-                          View ↗
+                          View live ↗
                         </Link>
                       )}
                       <DeletePostButton id={post.id} title={post.title} />
