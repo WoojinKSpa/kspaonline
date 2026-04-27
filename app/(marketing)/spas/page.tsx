@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 import type { Route } from "next";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowUpRight, MapPin, Search, X } from "lucide-react";
+import { ArrowUpRight, MapPin, Search, Star, X } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
@@ -10,7 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SPA_IMAGE_BUCKET } from "@/lib/spa-images";
+import {
+  createSupabaseAdminClient,
+  createSupabaseServerClient,
+} from "@/lib/supabase/server";
 
 type SpasPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,6 +32,8 @@ type PublishedSpa = {
   summary: string | null;
   is_featured: boolean;
   listing_categories: string[];
+  featured_image_url: string | null;
+  review_count: number;
 };
 
 type FilterOptions = {
@@ -86,7 +93,76 @@ function toPublishedSpa(row: Record<string, unknown>): PublishedSpa {
     listing_categories: Array.isArray(row.listing_categories)
       ? row.listing_categories.map((value) => String(value))
       : [],
+    featured_image_url: null,
+    review_count: 0,
   };
+}
+
+async function getSpaCardMeta(spaIds: string[]) {
+  const meta = new Map<
+    string,
+    { featured_image_url: string | null; review_count: number }
+  >();
+
+  spaIds.forEach((spaId) => {
+    meta.set(spaId, { featured_image_url: null, review_count: 0 });
+  });
+
+  if (spaIds.length === 0) {
+    return meta;
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data: imageRows } = await supabase
+    .from("spa_images")
+    .select("spa_id, storage_path, sort_order")
+    .eq("kind", "gallery")
+    .in("spa_id", spaIds)
+    .order("sort_order", { ascending: true });
+
+  for (const row of (imageRows ?? []) as Array<Record<string, unknown>>) {
+    const spaId = typeof row.spa_id === "string" ? row.spa_id : null;
+    const storagePath =
+      typeof row.storage_path === "string" ? row.storage_path : null;
+
+    if (!spaId || !storagePath || meta.get(spaId)?.featured_image_url) {
+      continue;
+    }
+
+    const { data } = supabase.storage
+      .from(SPA_IMAGE_BUCKET)
+      .getPublicUrl(storagePath);
+
+    meta.set(spaId, {
+      review_count: meta.get(spaId)?.review_count ?? 0,
+      featured_image_url: data.publicUrl,
+    });
+  }
+
+  const { data: reviewRows, error: reviewError } = await supabase
+    .from("spa_reviews")
+    .select("spa_id")
+    .eq("status", "approved")
+    .in("spa_id", spaIds);
+
+  if (!reviewError) {
+    for (const row of (reviewRows ?? []) as Array<Record<string, unknown>>) {
+      const spaId = typeof row.spa_id === "string" ? row.spa_id : null;
+      if (!spaId) continue;
+
+      const current = meta.get(spaId) ?? {
+        featured_image_url: null,
+        review_count: 0,
+      };
+
+      meta.set(spaId, {
+        ...current,
+        review_count: current.review_count + 1,
+      });
+    }
+  }
+
+  return meta;
 }
 
 async function getFilterOptions(): Promise<FilterOptions> {
@@ -155,7 +231,15 @@ async function getPublishedSpas(filters: DirectoryFilters) {
     throw new Error(`Failed to load spas: ${error.message}`);
   }
 
-  return ((data ?? []) as unknown as Array<Record<string, unknown>>).map(toPublishedSpa);
+  const spas = ((data ?? []) as unknown as Array<Record<string, unknown>>).map(
+    toPublishedSpa
+  );
+  const cardMeta = await getSpaCardMeta(spas.map((spa) => spa.id));
+
+  return spas.map((spa) => ({
+    ...spa,
+    ...(cardMeta.get(spa.id) ?? {}),
+  }));
 }
 
 function SelectField({
@@ -303,7 +387,26 @@ export default async function SpasPage({ searchParams }: SpasPageProps) {
       ) : (
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {spas.map((spa) => (
-            <Card key={spa.id} className="h-full">
+            <Card key={spa.id} className="h-full overflow-hidden">
+              {spa.featured_image_url ? (
+                <Link href={`/spas/${spa.slug}` as Route} aria-label={spa.name}>
+                  <img
+                    src={spa.featured_image_url}
+                    alt={`${spa.name} featured photo`}
+                    className="h-48 w-full object-cover transition duration-300 hover:scale-[1.02]"
+                  />
+                </Link>
+              ) : (
+                <Link
+                  href={`/spas/${spa.slug}` as Route}
+                  aria-label={spa.name}
+                  className="flex h-48 w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(14,108,93,0.18),transparent_34%),linear-gradient(135deg,#f4eee5,#fffaf3_48%,#edf4ef)]"
+                >
+                  <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                    Kspa.online
+                  </div>
+                </Link>
+              )}
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -320,6 +423,11 @@ export default async function SpasPage({ searchParams }: SpasPageProps) {
                         {spa.name}
                       </Link>
                     </CardTitle>
+                    <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
+                      <Star className="size-4 fill-primary text-primary" />
+                      {spa.review_count}{" "}
+                      {spa.review_count === 1 ? "review" : "reviews"}
+                    </p>
                   </div>
                   <div className="rounded-full bg-secondary p-3">
                     <MapPin className="size-4 text-primary" />
