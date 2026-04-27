@@ -356,7 +356,7 @@ function buildSpaPayload(formData: FormData): SpaPayload {
       ? toSlug(rawSlug)
       : toSlug(name);
 
-  return {
+  const payload: SpaPayload = {
     name,
     slug,
     website: emptyToNull(formData.get("website")),
@@ -378,9 +378,6 @@ function buildSpaPayload(formData: FormData): SpaPayload {
     google_review_url: emptyToNull(formData.get("google_review_url")),
     yelp_review_url: emptyToNull(formData.get("yelp_review_url")),
     is_featured: formData.get("is_featured") === "on",
-    business_email: emptyToNull(formData.get("business_email")),
-    business_website: emptyToNull(formData.get("business_website")),
-    business_phone: emptyToNull(formData.get("business_phone")),
     facebook_url: emptyToNull(formData.get("facebook_url")),
     instagram_url: emptyToNull(formData.get("instagram_url")),
     tiktok_url: emptyToNull(formData.get("tiktok_url")),
@@ -391,6 +388,20 @@ function buildSpaPayload(formData: FormData): SpaPayload {
     listing_categories: normalizeMultiValue(formData.getAll("listing_categories")),
     amenities: normalizeAmenities(formData.getAll("amenities")),
   };
+
+  if (formData.has("business_email")) {
+    payload.business_email = emptyToNull(formData.get("business_email"));
+  }
+
+  if (formData.has("business_website")) {
+    payload.business_website = emptyToNull(formData.get("business_website"));
+  }
+
+  if (formData.has("business_phone")) {
+    payload.business_phone = emptyToNull(formData.get("business_phone"));
+  }
+
+  return payload;
 }
 
 async function writeSpaWithFallback(

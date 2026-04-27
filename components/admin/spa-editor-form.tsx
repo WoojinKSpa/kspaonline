@@ -199,32 +199,6 @@ export function SpaEditorForm({
                 defaultValue={defaultValues?.email ?? ""}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="business_website">Business Website</Label>
-              <Input
-                id="business_website"
-                name="business_website"
-                type="url"
-                defaultValue={defaultValues?.business_website ?? ""}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="business_phone">Business Phone</Label>
-              <Input
-                id="business_phone"
-                name="business_phone"
-                defaultValue={defaultValues?.business_phone ?? ""}
-              />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="business_email">Business Email</Label>
-              <Input
-                id="business_email"
-                name="business_email"
-                type="email"
-                defaultValue={defaultValues?.business_email ?? ""}
-              />
-            </div>
           </Section>
 
           <Section title="Listing Content">
