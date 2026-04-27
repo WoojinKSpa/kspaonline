@@ -26,9 +26,9 @@ export async function submitSpaAction(formData: FormData) {
 
   if (!name || !city || !state) {
     redirect(
-      "/submit?error=" +
-        encodeURIComponent("Spa name, city, and state are required.")
-    as Route);
+      ("/submit?error=" +
+        encodeURIComponent("Spa name, city, and state are required.")) as Route
+    );
   }
 
   const supabase = createSupabaseAdminClient();
@@ -66,9 +66,9 @@ export async function submitSpaAction(formData: FormData) {
 
   if (error) {
     redirect(
-      "/submit?error=" +
-        encodeURIComponent("Something went wrong. Please try again.")
-    as Route);
+      ("/submit?error=" +
+        encodeURIComponent("Something went wrong. Please try again.")) as Route
+    );
   }
 
   redirect("/submit?success=1" as Route);
