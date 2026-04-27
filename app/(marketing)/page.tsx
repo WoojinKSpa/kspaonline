@@ -261,7 +261,7 @@ export default async function HomePage() {
               calmer, and more informed.
             </p>
             <Button asChild variant="outline" size="lg" className="mt-8">
-              <Link href="/guides/first-time-korean-spa">
+              <Link href="/guides/first-time-at-a-korean-spa">
                 Read the first-timer guide
               </Link>
             </Button>
