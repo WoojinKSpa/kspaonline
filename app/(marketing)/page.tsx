@@ -15,7 +15,7 @@ import type { BlogPost } from "@/lib/blog-posts";
 // ── Hero background image ─────────────────────────────────────────────────────
 // Upload your spa photo to Supabase Storage (or any HTTPS host) and paste the
 // public URL here. Leave empty to fall back to a solid gradient background.
-const HERO_IMAGE = "https://mqkjumltnmkpmkkqdmcn.supabase.co/storage/v1/object/public/website/website_background.png";
+const HERO_IMAGE = "https://mqkjumltnmkpmkkqdmcn.supabase.co/storage/v1/object/public/Website/website_background.png";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
