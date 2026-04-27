@@ -246,8 +246,8 @@ export default async function HomePage() {
         <Container>
           <SectionIntro
             eyebrow="Featured Spas"
-            title="A curated look at standout listings"
-            description="Featured spas are published listings highlighted by owners or editors, designed to help visitors start with trusted options."
+            title="A curated collection of top Korean spa destinations."
+            description="Exceptional listings chosen to help you find trusted, memorable experiences faster."
           />
 
           {featuredSpas.length === 0 ? (
