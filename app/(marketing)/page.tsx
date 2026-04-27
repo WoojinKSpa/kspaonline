@@ -117,6 +117,30 @@ async function getDirectoryStats() {
   };
 }
 
+const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
+  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
+  IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas",
+  KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada",
+  NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
+  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
+  VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia",
+  WI: "Wisconsin", WY: "Wyoming", DC: "Washington D.C.",
+  // Canadian provinces
+  AB: "Alberta", BC: "British Columbia", MB: "Manitoba", NB: "New Brunswick",
+  NL: "Newfoundland", NS: "Nova Scotia", ON: "Ontario", PE: "Prince Edward Island",
+  QC: "Quebec", SK: "Saskatchewan",
+};
+
+function stateLabel(state: string): string {
+  return STATE_NAMES[state.toUpperCase()] ?? state;
+}
+
 function SectionIntro({
   eyebrow,
   title,
@@ -375,14 +399,14 @@ export default async function HomePage() {
         <Container className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
             <SectionIntro
-              eyebrow="Browse by State"
+              eyebrow="Browse by Region"
               title="Start with the places already in the directory"
-              description="Browse state-by-state and jump into the listings that are currently live."
+              description="Explore listings by state, province, or region."
             />
 
             {states.length === 0 ? (
               <p className="mt-8 text-sm text-muted-foreground">
-                State listings will appear here as more published spas are added.
+                Region listings will appear here as more published spas are added.
               </p>
             ) : (
               <div className="mt-8 flex flex-wrap gap-3">
@@ -392,7 +416,7 @@ export default async function HomePage() {
                     href={{ pathname: "/spas", query: { state } }}
                     className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30 hover:bg-secondary"
                   >
-                    {state}
+                    {stateLabel(state)}
                   </Link>
                 ))}
               </div>
