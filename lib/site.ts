@@ -12,7 +12,8 @@ export const siteConfig = {
   url: "https://kspa.online",
   mainNav: [
     { href: "/", label: "Home" },
-    { href: "/spas", label: "Browse" },
-    { href: "/login", label: "Login" },
+    { href: "/spas", label: "Search" },
+    { href: "/blog", label: "Blog" },
+    { href: "/guides", label: "Guides" },
   ] satisfies NavItem[],
 };
