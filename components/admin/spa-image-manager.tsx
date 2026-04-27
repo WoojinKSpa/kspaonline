@@ -1,9 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
-import { ImagePlus, Images, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ImagePlus, Images, Star, X } from "lucide-react";
 
 import { MAX_GALLERY_IMAGE_COUNT, type SpaImage } from "@/lib/spa-images";
 
-import { GalleryImageGrid } from "@/components/admin/gallery-image-grid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -126,12 +125,104 @@ export function SpaImageManager({
           </form>
 
           {galleryImages.length > 0 ? (
-            <GalleryImageGrid
-              images={galleryImages}
-              setFeaturedAction={setFeaturedAction}
-              reorderAction={reorderImageAction}
-              deleteAction={deleteImageAction}
-            />
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {galleryImages.map((image, index) => {
+                const previousImage = galleryImages[index - 1] ?? null;
+                const nextImage = galleryImages[index + 1] ?? null;
+
+                return (
+                  <div
+                    key={image.id}
+                    className="overflow-hidden rounded-3xl border border-border bg-background p-3 shadow-sm"
+                  >
+                    <div className="relative">
+                      <img
+                        src={image.public_url}
+                        alt={
+                          index === 0
+                            ? "Featured business photo"
+                            : `Business photo ${index + 1}`
+                        }
+                        className="h-32 w-full rounded-2xl object-cover"
+                      />
+                      <form action={deleteImageAction} className="absolute right-2 top-2">
+                        <input type="hidden" name="image_id" value={image.id} />
+                        <Button
+                          type="submit"
+                          variant="secondary"
+                          size="sm"
+                          className="size-8 rounded-full bg-black/55 p-0 text-white hover:bg-black/75"
+                          aria-label="Delete image"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </form>
+                      {index === 0 ? (
+                        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground">
+                          <Star className="size-3.5" />
+                          Featured
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {index > 0 ? (
+                        <form action={setFeaturedAction}>
+                          <input type="hidden" name="image_id" value={image.id} />
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3"
+                          >
+                            <Star className="size-3.5" />
+                            Feature
+                          </Button>
+                        </form>
+                      ) : null}
+                      {previousImage ? (
+                        <form action={reorderImageAction}>
+                          <input type="hidden" name="dragged_image_id" value={image.id} />
+                          <input
+                            type="hidden"
+                            name="target_image_id"
+                            value={previousImage.id}
+                          />
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            className="size-8 p-0"
+                            aria-label="Move image up"
+                          >
+                            <ArrowUp className="size-4" />
+                          </Button>
+                        </form>
+                      ) : null}
+                      {nextImage ? (
+                        <form action={reorderImageAction}>
+                          <input type="hidden" name="dragged_image_id" value={image.id} />
+                          <input
+                            type="hidden"
+                            name="target_image_id"
+                            value={nextImage.id}
+                          />
+                          <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            className="size-8 p-0"
+                            aria-label="Move image down"
+                          >
+                            <ArrowDown className="size-4" />
+                          </Button>
+                        </form>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="rounded-3xl border border-dashed border-border bg-secondary/20 px-4 py-10 text-center text-sm text-muted-foreground">
               No business photos uploaded yet.
