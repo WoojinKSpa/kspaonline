@@ -1,4 +1,5 @@
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { ArrowRight, ExternalLink, MapPin, Search } from "lucide-react";
@@ -7,6 +8,7 @@ import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getFirstGalleryImageUrls } from "@/lib/spa-images";
 
 type FeaturedSpa = {
   id: string;
@@ -16,6 +18,7 @@ type FeaturedSpa = {
   state: string | null;
   summary: string | null;
   listing_categories: string[];
+  coverImageUrl: string | null;
 };
 
 async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
@@ -71,9 +74,12 @@ async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
     ])
   );
 
+  const coverImages = await getFirstGalleryImageUrls(baseSpas.map((s) => s.id));
+
   return baseSpas.map((spa) => ({
     ...spa,
     listing_categories: categoriesBySpaId.get(spa.id) ?? [],
+    coverImageUrl: coverImages.get(spa.id) ?? null,
   }));
 }
 
@@ -256,41 +262,58 @@ export default async function HomePage() {
               {featuredSpas.map((spa) => (
                 <div
                   key={spa.id}
-                  className="surface group flex h-full flex-col p-6 shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5"
+                  className="surface group flex h-full flex-col overflow-hidden shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      {spa.listing_categories[0] ? (
-                        <p className="inline-flex rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
-                          {spa.listing_categories[0]}
-                        </p>
-                      ) : null}
-                      <h3 className="mt-3 text-2xl font-semibold leading-tight">
-                        <Link
-                          href={`/spas/${spa.slug}` as Route}
-                          className="transition-colors hover:text-primary"
-                        >
-                          {spa.name}
-                        </Link>
-                      </h3>
+                  {/* Cover image */}
+                  {spa.coverImageUrl ? (
+                    <Link href={`/spas/${spa.slug}` as Route} className="relative block h-48 w-full shrink-0 overflow-hidden">
+                      <Image
+                        src={spa.coverImageUrl}
+                        alt={spa.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      />
+                    </Link>
+                  ) : (
+                    <div className="flex h-48 w-full shrink-0 items-center justify-center bg-secondary/50">
+                      <MapPin className="size-8 text-muted-foreground/30" />
                     </div>
-                    <div className="rounded-full bg-secondary p-3 text-primary">
-                      <MapPin className="size-4" />
+                  )}
+
+                  {/* Card body */}
+                  <div className="flex flex-1 flex-col p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        {spa.listing_categories[0] ? (
+                          <p className="inline-flex rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
+                            {spa.listing_categories[0]}
+                          </p>
+                        ) : null}
+                        <h3 className="mt-3 text-2xl font-semibold leading-tight">
+                          <Link
+                            href={`/spas/${spa.slug}` as Route}
+                            className="transition-colors hover:text-primary"
+                          >
+                            {spa.name}
+                          </Link>
+                        </h3>
+                      </div>
                     </div>
+                    <p className="mt-3 text-sm font-medium text-foreground">
+                      {[spa.city, spa.state].filter(Boolean).join(", ")}
+                    </p>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
+                      {spa.summary || "Published listing. Details will expand as more information is added."}
+                    </p>
+                    <Link
+                      href={`/spas/${spa.slug}` as Route}
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      View details
+                      <ExternalLink className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
                   </div>
-                  <p className="mt-5 text-sm font-medium text-foreground">
-                    {[spa.city, spa.state].filter(Boolean).join(", ")}
-                  </p>
-                  <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-                    {spa.summary || "Published listing. Details will expand as more information is added."}
-                  </p>
-                  <Link
-                    href={`/spas/${spa.slug}` as Route}
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-                  >
-                    View details
-                    <ExternalLink className="size-4 transition-transform group-hover:translate-x-0.5" />
-                  </Link>
                 </div>
               ))}
             </div>

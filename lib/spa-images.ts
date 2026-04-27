@@ -141,6 +141,40 @@ function sortSpaImages(images: SpaImage[]) {
 }
 
 /**
+ * Returns a map of spa_id → public URL of the first gallery image for each
+ * of the given spa IDs. Spas with no gallery images are omitted from the map.
+ * Used to show cover images on featured spa cards.
+ */
+export async function getFirstGalleryImageUrls(
+  spaIds: string[]
+): Promise<Map<string, string>> {
+  if (spaIds.length === 0) return new Map();
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("spa_images")
+    .select("spa_id, storage_path, sort_order")
+    .in("spa_id", spaIds)
+    .eq("kind", "gallery")
+    .order("sort_order", { ascending: true });
+
+  if (error) return new Map();
+
+  // Keep only the first (lowest sort_order) image per spa
+  const result = new Map<string, string>();
+  for (const row of data ?? []) {
+    const id = String(row.spa_id);
+    if (!result.has(id)) {
+      const { data: urlData } = supabase.storage
+        .from(SPA_IMAGE_BUCKET)
+        .getPublicUrl(String(row.storage_path));
+      result.set(id, urlData.publicUrl);
+    }
+  }
+  return result;
+}
+
+/**
  * Returns the set of spa IDs that have at least one image record.
  * Used for quality score computation across all listings.
  * Fails gracefully if the spa_images table does not yet exist.
