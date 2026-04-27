@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { ArrowRight, BookOpen, ExternalLink, MapPin, Search } from "lucide-react";
+import { ArrowRight, BookOpen, ExternalLink, Globe, Leaf, MapPin, Search } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,13 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getFirstGalleryImageUrls } from "@/lib/spa-images";
 import { listPublishedBlogPostsByType } from "@/lib/blog-posts";
 import type { BlogPost } from "@/lib/blog-posts";
+
+// ── Hero background image ─────────────────────────────────────────────────────
+// Upload your spa photo to Supabase Storage (or any HTTPS host) and paste the
+// public URL here. Leave empty to fall back to a solid gradient background.
+const HERO_IMAGE = "";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type FeaturedSpa = {
   id: string;
@@ -22,6 +29,8 @@ type FeaturedSpa = {
   listing_categories: string[];
   coverImageUrl: string | null;
 };
+
+// ── Data fetchers ─────────────────────────────────────────────────────────────
 
 async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
   const supabase = await createSupabaseServerClient();
@@ -47,9 +56,7 @@ async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
     error = fallbackResult.error;
   }
 
-  if (error) {
-    throw new Error(`Failed to load featured spas: ${error.message}`);
-  }
+  if (error) throw new Error(`Failed to load featured spas: ${error.message}`);
 
   const baseSpas = (data ?? []).map((spa) => ({
     id: String(spa.id),
@@ -61,17 +68,16 @@ async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
     listing_categories: [],
   }));
 
-  const categorySelect: string = "id, listing_categories";
   const { data: categoryData } = await supabase
     .from("spas")
-    .select(categorySelect)
+    .select("id, listing_categories" as string)
     .in("id", baseSpas.map((spa) => spa.id));
 
   const categoriesBySpaId = new Map(
     ((categoryData ?? []) as unknown as Array<Record<string, unknown>>).map((spa) => [
       String(spa.id),
       Array.isArray(spa.listing_categories)
-        ? spa.listing_categories.map((value) => String(value))
+        ? spa.listing_categories.map((v) => String(v))
         : [],
     ])
   );
@@ -87,35 +93,34 @@ async function getFeaturedSpas(): Promise<FeaturedSpa[]> {
 
 async function getDirectoryStats() {
   const supabase = await createSupabaseServerClient();
-  const locationSelect: string = "state, country";
   const { data, error } = await supabase
     .from("spas")
-    .select(locationSelect)
+    .select("state, country" as string)
     .eq("status", "published")
     .order("state", { ascending: true });
 
-  if (error) {
-    throw new Error(`Failed to load directory stats: ${error.message}`);
-  }
+  if (error) throw new Error(`Failed to load directory stats: ${error.message}`);
 
   const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
-  const states = [...new Set(
-    rows
-      .map((row) => (typeof row.state === "string" ? row.state.trim() : ""))
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b));
-  const countries = [...new Set(
-    rows
-      .map((row) => (typeof row.country === "string" ? row.country.trim() : ""))
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b));
+  const states = [
+    ...new Set(
+      rows
+        .map((row) => (typeof row.state === "string" ? row.state.trim() : ""))
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+  const countries = [
+    ...new Set(
+      rows
+        .map((row) => (typeof row.country === "string" ? row.country.trim() : ""))
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
 
-  return {
-    listingCount: rows.length,
-    states,
-    countries,
-  };
+  return { listingCount: rows.length, states, countries };
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const STATE_NAMES: Record<string, string> = {
   AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
@@ -131,7 +136,6 @@ const STATE_NAMES: Record<string, string> = {
   SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
   VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia",
   WI: "Wisconsin", WY: "Wyoming", DC: "Washington D.C.",
-  // Canadian provinces
   AB: "Alberta", BC: "British Columbia", MB: "Manitoba", NB: "New Brunswick",
   NL: "Newfoundland", NS: "Nova Scotia", ON: "Ontario", PE: "Prince Edward Island",
   QC: "Quebec", SK: "Saskatchewan",
@@ -152,16 +156,14 @@ function SectionIntro({
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-        {eyebrow}
-      </p>
+      <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">{eyebrow}</p>
       <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">{title}</h2>
-      <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-        {description}
-      </p>
+      <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">{description}</p>
     </div>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
   noStore();
@@ -173,102 +175,133 @@ export default async function HomePage() {
   ]);
   const { countries, listingCount, states } = directoryStats;
 
+  const heroStats = [
+    { icon: Leaf,   label: "Spa Listings", value: listingCount },
+    { icon: MapPin, label: "States",       value: states.length },
+    { icon: Globe,  label: "Countries",    value: countries.length },
+  ];
+
   return (
     <div className="pb-20">
-      <section className="relative overflow-hidden border-b border-white/50">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(248,220,191,0.75),_transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,255,255,0.96))]" />
-        <Container className="relative grid gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-24">
-          <div className="max-w-3xl">
-            <Badge className="mb-6 bg-primary/10 text-primary hover:bg-primary/10">
+
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <section className="relative flex min-h-[620px] items-center overflow-hidden lg:min-h-[740px]">
+        {/* Background */}
+        {HERO_IMAGE ? (
+          <Image
+            src={HERO_IMAGE}
+            alt="Korean spa interior"
+            fill
+            priority
+            className="object-cover object-center"
+          />
+        ) : (
+          /* Fallback gradient when no image is set */
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(173,55%,14%)_0%,hsl(173,40%,22%)_45%,hsl(26,40%,22%)_100%)]" />
+        )}
+
+        {/* Dark overlay — heavier on the left so text stays legible */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/25" />
+        {/* Bottom fade so the section blends into the page */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background/30 to-transparent" />
+
+        {/* Content */}
+        <Container className="relative z-10 py-20 lg:py-28">
+          <div className="max-w-xl">
+            {/* Badge */}
+            <Badge className="mb-6 border border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/15">
               Korean spa directory
             </Badge>
-            <h1 className="max-w-3xl text-5xl font-semibold leading-tight sm:text-6xl">
-              Find Korean Spas Near You
+
+            {/* Heading */}
+            <h1 className="text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Find Korean<br className="hidden sm:block" /> Spas Near You
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+
+            {/* Subtext */}
+            <p className="mt-6 max-w-md text-lg leading-8 text-white/75">
               Explore Korean spas, saunas, jjimjilbangs, and wellness spaces
               across the U.S.
             </p>
 
-            <form action="/spas" className="mt-8 max-w-2xl">
-              <div className="surface flex flex-col gap-3 p-3 shadow-[0_20px_60px_-30px_rgba(73,56,35,0.35)] sm:flex-row sm:items-center">
-                <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[22px] px-3 py-3">
-                  <div className="rounded-full bg-primary/10 p-2 text-primary">
-                    <Search className="size-4" />
-                  </div>
+            {/* Search bar */}
+            <form action="/spas" className="mt-8 max-w-lg">
+              <div className="flex items-center overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+                <div className="flex flex-1 items-center gap-3 px-4 py-1">
+                  <Search className="size-4 shrink-0 text-muted-foreground" />
                   <input
                     type="text"
                     name="q"
                     placeholder="Search by spa name, city, or state"
-                    className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                    className="w-full bg-transparent py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                   />
                 </div>
-                <div className="flex gap-3">
-                  <Button type="submit" size="lg" className="flex-1 sm:flex-none">
+                <div className="p-1.5">
+                  <Button type="submit" size="default" className="rounded-xl px-5">
                     Search
-                    <Search data-icon="inline-end" className="size-4" />
                   </Button>
                 </div>
               </div>
             </form>
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            {/* CTA buttons */}
+            <div className="mt-5 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/spas">
                   Browse Spas
-                  <ArrowRight data-icon="inline-end" />
+                  <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:border-white/50 hover:bg-white/20 hover:text-white"
+              >
                 <Link href={"/submit" as Route}>Submit a spa</Link>
               </Button>
             </div>
 
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              {[
-                {
-                  label: "Spa Listings",
-                  value: String(listingCount),
-                },
-                {
-                  label: "States",
-                  value: String(states.length),
-                },
-                {
-                  label: "Countries",
-                  value: String(countries.length),
-                },
-              ].map((stat) => (
+            {/* Stats */}
+            <div className="mt-12 flex flex-wrap gap-3">
+              {heroStats.map(({ icon: Icon, label, value }) => (
                 <div
-                  key={stat.label}
-                  className="surface p-5 shadow-[0_16px_44px_-34px_rgba(0,0,0,0.35)]"
+                  key={label}
+                  className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md"
                 >
-                  <p className="text-2xl font-semibold">{stat.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                    <Icon className="size-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold leading-none text-white">{value}</p>
+                    <p className="mt-1 text-xs text-white/60">{label}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="surface p-6 shadow-[0_24px_80px_-44px_rgba(53,37,21,0.45)] sm:p-8">
-            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-              First-Timer Guide
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold">New to Korean Spas?</h2>
-            <p className="mt-5 text-base leading-7 text-muted-foreground">
-              Kspa.online helps visitors understand amenities, etiquette,
-              pricing, and what to expect so their first visit feels easier,
-              calmer, and more informed.
-            </p>
-            <Button asChild variant="outline" size="lg" className="mt-8">
-              <Link href="/guides/first-time-at-a-korean-spa">
-                Read the first-timer guide
-              </Link>
-            </Button>
-          </div>
         </Container>
       </section>
 
+      {/* ── First-timer callout ────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-secondary/40 py-14">
+        <Container className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="max-w-lg">
+            <p className="text-xs font-medium uppercase tracking-widest text-primary">First-timer guide</p>
+            <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">New to Korean Spas?</h2>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">
+              Understand amenities, etiquette, pricing, and what to expect so your first visit feels easier and more relaxed.
+            </p>
+          </div>
+          <Button asChild size="lg" variant="outline" className="shrink-0">
+            <Link href="/guides/first-time-at-a-korean-spa">
+              Read the first-timer guide →
+            </Link>
+          </Button>
+        </Container>
+      </section>
+
+      {/* ── Featured Spas ─────────────────────────────────────────────────── */}
       <section className="py-20">
         <Container>
           <SectionIntro
@@ -291,7 +324,6 @@ export default async function HomePage() {
                   key={spa.id}
                   className="surface group flex h-full flex-col overflow-hidden shadow-[0_18px_52px_-38px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5"
                 >
-                  {/* Cover image */}
                   {spa.coverImageUrl ? (
                     <Link href={`/spas/${spa.slug}` as Route} className="relative block h-48 w-full shrink-0 overflow-hidden">
                       <Image
@@ -308,24 +340,18 @@ export default async function HomePage() {
                     </div>
                   )}
 
-                  {/* Card body */}
                   <div className="flex flex-1 flex-col p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        {spa.listing_categories[0] ? (
-                          <p className="inline-flex rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
-                            {spa.listing_categories[0]}
-                          </p>
-                        ) : null}
-                        <h3 className="mt-3 text-2xl font-semibold leading-tight">
-                          <Link
-                            href={`/spas/${spa.slug}` as Route}
-                            className="transition-colors hover:text-primary"
-                          >
-                            {spa.name}
-                          </Link>
-                        </h3>
-                      </div>
+                    <div>
+                      {spa.listing_categories[0] && (
+                        <p className="inline-flex rounded-full bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
+                          {spa.listing_categories[0]}
+                        </p>
+                      )}
+                      <h3 className="mt-3 text-2xl font-semibold leading-tight">
+                        <Link href={`/spas/${spa.slug}` as Route} className="transition-colors hover:text-primary">
+                          {spa.name}
+                        </Link>
+                      </h3>
                     </div>
                     <p className="mt-3 text-sm font-medium text-foreground">
                       {[spa.city, spa.state].filter(Boolean).join(", ")}
@@ -348,8 +374,9 @@ export default async function HomePage() {
         </Container>
       </section>
 
+      {/* ── From the Guides ───────────────────────────────────────────────── */}
       {recentPosts.length > 0 && (
-        <section className="py-20 bg-secondary/30">
+        <section className="bg-secondary/30 py-20">
           <Container>
             <div className="flex items-end justify-between gap-4">
               <SectionIntro
@@ -357,10 +384,7 @@ export default async function HomePage() {
                 title="Tips & Guides"
                 description="Expert advice to help you make the most of your Korean spa experience."
               />
-              <Link
-                href={"/guides" as Route}
-                className="shrink-0 text-sm font-medium text-primary hover:underline"
-              >
+              <Link href={"/guides" as Route} className="shrink-0 text-sm font-medium text-primary hover:underline">
                 All guides →
               </Link>
             </div>
@@ -372,7 +396,6 @@ export default async function HomePage() {
                   href={(`/guides/${post.slug}`) as Route}
                   className="group surface flex flex-col overflow-hidden shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
                 >
-                  {/* Thumbnail */}
                   {post.featured_image_url ? (
                     <div className="relative h-44 w-full shrink-0 overflow-hidden">
                       <Image
@@ -389,10 +412,9 @@ export default async function HomePage() {
                     </div>
                   )}
 
-                  {/* Body */}
                   <div className="flex flex-1 flex-col gap-3 p-6">
                     <p className="text-xs font-medium uppercase tracking-widest text-primary">Guide</p>
-                    <h3 className="text-xl font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                    <h3 className="text-xl font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                       {post.title}
                     </h3>
                     {post.excerpt && (
@@ -411,7 +433,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      <section className="pb-20">
+      {/* ── Browse by Region + Owners ─────────────────────────────────────── */}
+      <section className="pb-20 pt-20">
         <Container className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
             <SectionIntro
@@ -419,7 +442,6 @@ export default async function HomePage() {
               title="Start with the places already in the directory"
               description="Explore listings by state, province, or region."
             />
-
             {states.length === 0 ? (
               <p className="mt-8 text-sm text-muted-foreground">
                 Region listings will appear here as more published spas are added.
@@ -439,22 +461,15 @@ export default async function HomePage() {
             )}
           </div>
 
-          <div>
-            <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
-              <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-                Owners
-              </p>
-              <h3 className="mt-3 text-3xl font-semibold">
-                Own or manage a Korean spa?
-              </h3>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Claim your listing, keep your details current, and help new
-                guests discover your spa.
-              </p>
-              <Button asChild size="lg" className="mt-6">
-                <Link href={"/claim" as Route}>Claim your listing</Link>
-              </Button>
-            </div>
+          <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
+            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Owners</p>
+            <h3 className="mt-3 text-3xl font-semibold">Own or manage a Korean spa?</h3>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              Claim your listing, keep your details current, and help new guests discover your spa.
+            </p>
+            <Button asChild size="lg" className="mt-6">
+              <Link href={"/claim" as Route}>Claim your listing</Link>
+            </Button>
           </div>
         </Container>
       </section>
