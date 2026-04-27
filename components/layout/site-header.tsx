@@ -62,19 +62,17 @@ export async function SiteHeader() {
             <>
               {isAdmin && (
                 <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href={"/admin" as Route}>Admin</Link>
+                  <Link href={"/admin" as Route}>Admin dashboard</Link>
                 </Button>
               )}
               {isOwner && (
                 <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href={"/owner/dashboard" as Route}>Dashboard</Link>
+                  <Link href={"/owner/dashboard" as Route}>My spa</Link>
                 </Button>
               )}
-              {!isAdmin && !isOwner && (
-                <Button asChild variant="ghost" className="hidden sm:inline-flex">
-                  <Link href={"/account" as Route}>My account</Link>
-                </Button>
-              )}
+              <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                <Link href={"/account" as Route}>My account</Link>
+              </Button>
             </>
           ) : (
             <>
