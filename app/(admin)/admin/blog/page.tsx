@@ -2,9 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-import { deleteBlogPostAction } from "@/app/(admin)/admin/blog/actions";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Button } from "@/components/ui/button";
+import { DeletePostButton } from "@/components/admin/delete-post-button";
 import { listAllBlogPosts } from "@/lib/blog-posts";
 
 export const metadata = { title: "Blog Posts | Admin" };
@@ -95,16 +95,7 @@ export default async function AdminBlogPage({ searchParams }: Props) {
                           View ↗
                         </Link>
                       )}
-                      <form action={deleteBlogPostAction}>
-                        <input type="hidden" name="id" value={post.id} />
-                        <button
-                          type="submit"
-                          className="text-sm text-destructive hover:underline"
-                          onClick={(e) => { if (!confirm(`Delete "${post.title}"?`)) e.preventDefault(); }}
-                        >
-                          Delete
-                        </button>
-                      </form>
+                      <DeletePostButton id={post.id} title={post.title} />
                     </div>
                   </td>
                 </tr>

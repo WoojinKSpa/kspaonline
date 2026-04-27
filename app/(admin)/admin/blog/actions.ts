@@ -23,15 +23,23 @@ export async function createBlogPostAction(formData: FormData) {
 
   if (!title) redirect("/admin/blog/new?error=Title+is+required" as Route);
 
+  let post: Awaited<ReturnType<typeof createBlogPost>> | null = null;
+  let errorMsg: string | null = null;
+
   try {
-    const post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status, post_type });
-    revalidatePath("/admin/blog" as Route);
-    revalidatePath("/guides" as Route);
-    redirect(`/admin/blog/${post.id}` as Route);
+    post = await createBlogPost({ title, slug: slug || undefined, excerpt, content, status, post_type });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to create post";
-    redirect(("/admin/blog/new?error=" + encodeURIComponent(msg)) as Route);
+    errorMsg = e instanceof Error ? e.message : "Failed to create post";
   }
+
+  if (errorMsg || !post) {
+    redirect(("/admin/blog/new?error=" + encodeURIComponent(errorMsg ?? "Failed to create post")) as Route);
+  }
+
+  revalidatePath("/admin/blog" as Route);
+  revalidatePath("/guides" as Route);
+  revalidatePath("/blog" as Route);
+  redirect((`/admin/blog/${post.id}`) as Route);
 }
 
 export async function updateBlogPostAction(formData: FormData) {
@@ -48,6 +56,8 @@ export async function updateBlogPostAction(formData: FormData) {
   const existing = await getBlogPostById(id);
   if (!existing) redirect("/admin/blog" as Route);
 
+  let errorMsg: string | null = null;
+
   try {
     await updateBlogPost(id, {
       title,
@@ -59,15 +69,23 @@ export async function updateBlogPostAction(formData: FormData) {
       previousStatus: existing.status,
       previousPublishedAt: existing.published_at,
     });
-    revalidatePath("/admin/blog" as Route);
-    revalidatePath((`/admin/blog/${id}`) as Route);
-    revalidatePath("/guides" as Route);
-    if (existing.slug) revalidatePath((`/guides/${existing.slug}`) as Route);
-    redirect((`/admin/blog/${id}?success=1`) as Route);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to save post";
-    redirect((`/admin/blog/${id}?error=` + encodeURIComponent(msg)) as Route);
+    errorMsg = e instanceof Error ? e.message : "Failed to save post";
   }
+
+  if (errorMsg) {
+    redirect((`/admin/blog/${id}?error=` + encodeURIComponent(errorMsg)) as Route);
+  }
+
+  revalidatePath("/admin/blog" as Route);
+  revalidatePath((`/admin/blog/${id}`) as Route);
+  revalidatePath("/guides" as Route);
+  revalidatePath("/blog" as Route);
+  if (existing.slug) {
+    revalidatePath((`/guides/${existing.slug}`) as Route);
+    revalidatePath((`/blog/${existing.slug}`) as Route);
+  }
+  redirect((`/admin/blog/${id}?success=1`) as Route);
 }
 
 export async function deleteBlogPostAction(formData: FormData) {
@@ -78,6 +96,7 @@ export async function deleteBlogPostAction(formData: FormData) {
     await deleteBlogPost(id);
     revalidatePath("/admin/blog" as Route);
     revalidatePath("/guides" as Route);
+    revalidatePath("/blog" as Route);
   } catch {
     // best-effort
   }
