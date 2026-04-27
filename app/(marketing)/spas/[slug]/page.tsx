@@ -14,6 +14,7 @@ import {
   Star,
   XCircle,
   Heart,
+  MessageSquare,
 } from "lucide-react";
 
 import {
@@ -26,10 +27,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { listSpaImagesBySpaId } from "@/lib/spa-images";
+import {
+  getApprovedReviewSummary,
+  getUserReviewForSpa,
+  listApprovedReviewsBySpaId,
+} from "@/lib/spa-reviews";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SpaDetailPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ review_submitted?: string }>;
 };
 
 type PublicSpa = {
@@ -217,6 +224,23 @@ function SectionCard({
   );
 }
 
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="inline-flex items-center gap-0.5 text-primary">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={
+            star <= Math.round(rating)
+              ? "size-4 fill-current"
+              : "size-4 text-muted-foreground/30"
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 export async function generateMetadata({ params }: SpaDetailPageProps) {
   const { slug } = await params;
   const spa = await getPublishedSpaBySlug(slug);
@@ -231,10 +255,14 @@ export async function generateMetadata({ params }: SpaDetailPageProps) {
   };
 }
 
-export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
+export default async function SpaDetailPage({
+  params,
+  searchParams,
+}: SpaDetailPageProps) {
   noStore();
 
   const { slug } = await params;
+  const query = await searchParams;
   const spa = await getPublishedSpaBySlug(slug);
 
   if (!spa) {
@@ -280,6 +308,15 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
     public_url: image.public_url,
     alt: `${spa.name} gallery photo ${index + 2}`,
   }));
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [reviewSummary, reviews, userReview] = await Promise.all([
+    getApprovedReviewSummary(spa.id),
+    listApprovedReviewsBySpaId(spa.id),
+    user ? getUserReviewForSpa(spa.id, user.id) : Promise.resolve(null),
+  ]);
 
   return (
     <Container className="py-16">
@@ -301,6 +338,12 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
         </Card>
       ) : null}
 
+      {query?.review_submitted ? (
+        <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Your review has been submitted and is pending approval.
+        </div>
+      ) : null}
+
       <div className="mt-8 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="grid gap-4">
           <Card>
@@ -313,6 +356,16 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                       {primaryCategory}
                     </Badge>
                   ) : null}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-2">
+                    <StarRating rating={reviewSummary.average} />
+                    {reviewSummary.count > 0
+                      ? `${reviewSummary.average.toFixed(1)} (${reviewSummary.count} review${
+                          reviewSummary.count === 1 ? "" : "s"
+                        })`
+                      : "No reviews yet"}
+                  </span>
                 </div>
                 {fullAddress ? (
                   <p className="mt-3 text-base text-muted-foreground">{fullAddress}</p>
@@ -355,6 +408,36 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
                     {spa.summary}
                   </p>
                 ) : null}
+                <div className="mt-5">
+                  {userReview?.status === "pending" ? (
+                    <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      Your review is awaiting approval.
+                    </p>
+                  ) : userReview ? (
+                    <Button asChild variant="outline">
+                      <Link href={`/spas/${spa.slug}/review` as Route}>
+                        Edit your review
+                      </Link>
+                    </Button>
+                  ) : user ? (
+                    <Button asChild>
+                      <Link href={`/spas/${spa.slug}/review` as Route}>
+                        <MessageSquare className="size-4" />
+                        Write a review
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button asChild>
+                      <Link
+                        href={
+                          "/signin?message=Please+sign+in+to+review" as Route
+                        }
+                      >
+                        Sign in to review
+                      </Link>
+                    </Button>
+                  )}
+                </div>
                 {secondaryCategories.length > 0 ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {secondaryCategories.map((category) => (
@@ -520,6 +603,69 @@ export default async function SpaDetailPage({ params }: SpaDetailPageProps) {
           <SpaGalleryLightbox images={lightboxImages} />
         </aside>
       </div>
+
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Guest reviews</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {reviews.length > 0 ? (
+            reviews.map((review) => (
+              <div
+                key={review.id}
+                className="rounded-3xl border border-border bg-background p-5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <StarRating rating={review.rating} />
+                    <p className="mt-1 text-sm font-medium">
+                      {review.user_display_name}
+                    </p>
+                  </div>
+                  {review.created_at ? (
+                    <p className="text-xs text-muted-foreground">
+                      {new Intl.DateTimeFormat("en", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }).format(new Date(review.created_at))}
+                    </p>
+                  ) : null}
+                </div>
+                {review.title ? (
+                  <h3 className="mt-4 text-lg font-semibold">{review.title}</h3>
+                ) : null}
+                <p className="mt-2 whitespace-pre-line text-sm leading-7 text-muted-foreground">
+                  {review.body}
+                </p>
+                {review.photos.length > 0 ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {review.photos.map((photo) => (
+                      <a
+                        key={photo.id}
+                        href={photo.image_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="overflow-hidden rounded-2xl border border-border"
+                      >
+                        <img
+                          src={photo.image_url}
+                          alt={`${spa.name} review photo`}
+                          className="h-36 w-full object-cover transition hover:scale-105"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+              No approved reviews yet.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </Container>
   );
 }

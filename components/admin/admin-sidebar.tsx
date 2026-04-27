@@ -9,6 +9,7 @@ const links: Array<{ href: Route; label: string }> = [
   { href: "/admin/duplicates", label: "Duplicates" },
   { href: "/admin/imports", label: "Imports" },
   { href: "/admin/claims", label: "Claims" },
+  { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/spas/new", label: "Add spa" },
 ];
