@@ -29,7 +29,7 @@ function extractPostFields(formData: FormData) {
 // ── Create ────────────────────────────────────────────────────────
 
 async function _createPost(formData: FormData, status: BlogPostStatus) {
-  const { title, slug, excerpt, content, post_type } = extractPostFields(formData);
+  const { title, slug, excerpt, content, post_type, featured_image_url } = extractPostFields(formData);
 
   if (!title) redirect("/admin/blog/new?error=Title+is+required" as Route);
 
