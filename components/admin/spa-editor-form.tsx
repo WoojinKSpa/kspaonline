@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { AMENITY_CATEGORIES, normalizeAmenitySelection } from "@/lib/amenities";
 import type { SpaStatus } from "@/lib/admin-spas";
 
@@ -203,48 +204,48 @@ export function SpaEditorForm({
 
           <Section title="Listing Content">
             <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
+              <Label>Description</Label>
+              <RichTextEditor
                 name="description"
-                rows={6}
-                defaultValue={defaultValues?.description ?? ""}
+                defaultValue={defaultValues?.description}
+                placeholder="Full description of the spa…"
+                minHeight="min-h-[200px]"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="hours_text">Hours</Label>
-              <Textarea
-                id="hours_text"
+              <Label>Hours</Label>
+              <RichTextEditor
                 name="hours_text"
-                rows={4}
-                defaultValue={defaultValues?.hours_text ?? ""}
+                defaultValue={defaultValues?.hours_text}
+                placeholder="e.g. Mon–Fri 9am–10pm, Sat–Sun 8am–11pm"
+                minHeight="min-h-[140px]"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="pricing_text">Pricing</Label>
-              <Textarea
-                id="pricing_text"
+              <Label>Pricing</Label>
+              <RichTextEditor
                 name="pricing_text"
-                rows={4}
-                defaultValue={defaultValues?.pricing_text ?? ""}
+                defaultValue={defaultValues?.pricing_text}
+                placeholder="e.g. Day pass $45, couples $80…"
+                minHeight="min-h-[140px]"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="what_to_know">What to Know</Label>
-              <Textarea
-                id="what_to_know"
+              <Label>What to Know</Label>
+              <RichTextEditor
                 name="what_to_know"
-                rows={5}
-                defaultValue={defaultValues?.what_to_know ?? ""}
+                defaultValue={defaultValues?.what_to_know}
+                placeholder="Tips for first-time visitors…"
+                minHeight="min-h-[160px]"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="important_notes">Important Notes</Label>
-              <Textarea
-                id="important_notes"
+              <Label>Important Notes</Label>
+              <RichTextEditor
                 name="important_notes"
-                rows={5}
-                defaultValue={defaultValues?.important_notes ?? ""}
+                defaultValue={defaultValues?.important_notes}
+                placeholder="Anything guests should be aware of…"
+                minHeight="min-h-[160px]"
               />
             </div>
           </Section>
