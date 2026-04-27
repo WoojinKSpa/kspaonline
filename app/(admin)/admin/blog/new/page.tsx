@@ -1,6 +1,9 @@
 import type { Route } from "next";
 
-import { createBlogPostAction } from "@/app/(admin)/admin/blog/actions";
+import {
+  createBlogPostAsDraftAction,
+  createBlogPostAsPublishedAction,
+} from "@/app/(admin)/admin/blog/actions";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Button } from "@/components/ui/button";
@@ -28,7 +31,7 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
         </div>
       )}
 
-      <form action={createBlogPostAction} className="flex flex-col gap-6">
+      <form action={createBlogPostAsDraftAction} className="flex flex-col gap-6">
         <div className="grid gap-6 rounded-2xl border border-border bg-card p-6 md:grid-cols-2">
           <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="title">Title *</Label>
@@ -71,9 +74,8 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
             ← Back to posts
           </a>
           <div className="flex gap-3">
-            {/* name="status" only on buttons — no status select in this form to avoid collision */}
-            <Button type="submit" name="status" value="draft" variant="outline">Save draft</Button>
-            <Button type="submit" name="status" value="published">Publish</Button>
+            <Button type="submit" variant="outline">Save draft</Button>
+            <Button type="submit" formAction={createBlogPostAsPublishedAction}>Publish</Button>
           </div>
         </div>
       </form>

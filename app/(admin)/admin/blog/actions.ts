@@ -13,13 +13,22 @@ import {
   type BlogPostType,
 } from "@/lib/blog-posts";
 
-export async function createBlogPostAction(formData: FormData) {
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
-  const slug = (formData.get("slug") as string | null)?.trim() ?? "";
-  const excerpt = (formData.get("excerpt") as string | null)?.trim() || null;
-  const content = (formData.get("content") as string | null) || null;
-  const status = (formData.get("status") as BlogPostStatus) ?? "draft";
-  const post_type = (formData.get("post_type") as BlogPostType) ?? "guide";
+// ── Shared helpers ────────────────────────────────────────────────
+
+function extractPostFields(formData: FormData) {
+  return {
+    title: (formData.get("title") as string | null)?.trim() ?? "",
+    slug: (formData.get("slug") as string | null)?.trim() ?? "",
+    excerpt: (formData.get("excerpt") as string | null)?.trim() || null,
+    content: (formData.get("content") as string | null) || null,
+    post_type: ((formData.get("post_type") as string | null) ?? "guide") as BlogPostType,
+  };
+}
+
+// ── Create ────────────────────────────────────────────────────────
+
+async function _createPost(formData: FormData, status: BlogPostStatus) {
+  const { title, slug, excerpt, content, post_type } = extractPostFields(formData);
 
   if (!title) redirect("/admin/blog/new?error=Title+is+required" as Route);
 
@@ -42,14 +51,19 @@ export async function createBlogPostAction(formData: FormData) {
   redirect((`/admin/blog/${post.id}`) as Route);
 }
 
-export async function updateBlogPostAction(formData: FormData) {
+export async function createBlogPostAsDraftAction(formData: FormData) {
+  await _createPost(formData, "draft");
+}
+
+export async function createBlogPostAsPublishedAction(formData: FormData) {
+  await _createPost(formData, "published");
+}
+
+// ── Update ────────────────────────────────────────────────────────
+
+async function _updatePost(formData: FormData, status: BlogPostStatus) {
   const id = formData.get("id") as string;
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
-  const slug = (formData.get("slug") as string | null)?.trim() ?? "";
-  const excerpt = (formData.get("excerpt") as string | null)?.trim() || null;
-  const content = (formData.get("content") as string | null) || null;
-  const status = (formData.get("status") as BlogPostStatus) ?? "draft";
-  const post_type = (formData.get("post_type") as BlogPostType) ?? "guide";
+  const { title, slug, excerpt, content, post_type } = extractPostFields(formData);
 
   if (!id || !title) redirect((`/admin/blog/${id}?error=Title+is+required`) as Route);
 
@@ -87,6 +101,16 @@ export async function updateBlogPostAction(formData: FormData) {
   }
   redirect((`/admin/blog/${id}?success=1`) as Route);
 }
+
+export async function updateBlogPostAsDraftAction(formData: FormData) {
+  await _updatePost(formData, "draft");
+}
+
+export async function updateBlogPostAsPublishedAction(formData: FormData) {
+  await _updatePost(formData, "published");
+}
+
+// ── Delete ────────────────────────────────────────────────────────
 
 export async function deleteBlogPostAction(formData: FormData) {
   const id = formData.get("id") as string;
