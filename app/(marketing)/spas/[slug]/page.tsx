@@ -210,15 +210,26 @@ function SectionCard({
     return null;
   }
 
+  // Content from the rich-text editor is stored as HTML — render it as markup.
+  // Plain-text legacy values (no tags) still display correctly via the prose styles.
+  const isHtml = body.trimStart().startsWith("<");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="whitespace-pre-line text-sm leading-7 text-muted-foreground">
-          {body}
-        </p>
+        {isHtml ? (
+          <div
+            className="article-prose text-sm text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: body }}
+          />
+        ) : (
+          <p className="whitespace-pre-line text-sm leading-7 text-muted-foreground">
+            {body}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -558,10 +569,17 @@ export default async function SpaDetailPage({
               <CardTitle>Pricing</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 text-sm">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">{pricingLabel}</span>
-                <span className="font-medium">{spa.day_pass_price || pricing || "N/A"}</span>
-              </div>
+              {spa.pricing_text && spa.pricing_text.trimStart().startsWith("<") ? (
+                <div
+                  className="article-prose text-sm text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: spa.pricing_text }}
+                />
+              ) : (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-muted-foreground">{pricingLabel}</span>
+                  <span className="font-medium">{spa.day_pass_price || pricing || "N/A"}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
