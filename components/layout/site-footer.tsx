@@ -6,10 +6,11 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border/80 py-8">
       <Container className="flex flex-col gap-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 Kspa.online. Built for spa discovery and admin publishing.</p>
+        <p>© 2026 Kspa.online.</p>
         <div className="flex items-center gap-5">
-          <Link href="/spas">Browse</Link>
-          <Link href="/login">Login</Link>
+          <Link href="/spas">Search</Link>
+          <Link href="/blog">Blog</Link>
+          <Link href="/guides">Guides</Link>
         </div>
       </Container>
     </footer>
