@@ -32,7 +32,7 @@ export function AdminSidebar() {
     <aside className="surface h-fit p-4">
       <nav className="flex flex-col gap-1">
         {sections.map((group, i) => (
-          <div key={i}>
+          <div key={i} className="flex flex-col">
             {group.section && (
               <p className="mt-4 px-3 pb-1 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground/60">
                 {group.section}
