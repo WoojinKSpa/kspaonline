@@ -397,7 +397,7 @@ export default async function HomePage() {
                   className="group surface flex flex-col overflow-hidden shadow-[0_12px_36px_-28px_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5"
                 >
                   {post.featured_image_url ? (
-                    <div className="relative h-44 w-full shrink-0 overflow-hidden">
+                    <div className="relative h-48 w-full shrink-0 overflow-hidden">
                       <Image
                         src={post.featured_image_url}
                         alt={post.title}
@@ -407,7 +407,7 @@ export default async function HomePage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex h-32 w-full shrink-0 items-center justify-center bg-primary/5">
+                    <div className="flex h-48 w-full shrink-0 items-center justify-center bg-primary/5">
                       <BookOpen className="size-8 text-primary/20" />
                     </div>
                   )}

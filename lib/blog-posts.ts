@@ -31,7 +31,7 @@ export async function listAllBlogPosts(): Promise<BlogPost[]> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("blog_posts")
-    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
+    .select("id, title, slug, excerpt, status, post_type, featured_image_url, published_at, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -136,7 +136,7 @@ export async function listPublishedBlogPosts(limit?: number): Promise<BlogPost[]
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("blog_posts")
-    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
+    .select("id, title, slug, excerpt, status, post_type, featured_image_url, published_at, created_at, updated_at")
     .eq("status", "published")
     .order("published_at", { ascending: false });
 
@@ -154,7 +154,7 @@ export async function listPublishedBlogPostsByType(
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("blog_posts")
-    .select("id, title, slug, excerpt, status, post_type, published_at, created_at, updated_at")
+    .select("id, title, slug, excerpt, status, post_type, featured_image_url, published_at, created_at, updated_at")
     .eq("status", "published")
     .eq("post_type", type)
     .order("published_at", { ascending: false });
