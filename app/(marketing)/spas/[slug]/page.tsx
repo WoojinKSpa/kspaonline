@@ -242,42 +242,40 @@ function SpaMapCard({
   const appleMapsUrl = `https://maps.apple.com/?daddr=${encodeURIComponent(address)}`;
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="rounded-[24px] shadow-none">
       <CardHeader>
         <CardTitle>Location</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {/* Map embed */}
-        <div className="overflow-hidden rounded-2xl border border-border">
+      <CardContent className="flex flex-col gap-3 pt-0">
+        {/* Square map */}
+        <div className="aspect-square w-full overflow-hidden rounded-2xl border border-border">
           <iframe
             title="Spa location map"
             src={osmEmbed}
-            className="h-64 w-full border-0 lg:h-80"
+            className="h-full w-full border-0"
             loading="lazy"
           />
         </div>
 
         {/* Directions buttons */}
-        <div className="flex flex-wrap gap-3">
-          <a
-            href={appleMapsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
-          >
-            <Navigation className="size-4 text-primary" />
-            Apple Maps
-          </a>
-          <a
-            href={googleMapsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
-          >
-            <Navigation className="size-4 text-primary" />
-            Google Maps
-          </a>
-        </div>
+        <a
+          href={appleMapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
+        >
+          <Navigation className="size-4 text-primary" />
+          Get directions · Apple Maps
+        </a>
+        <a
+          href={googleMapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
+        >
+          <Navigation className="size-4 text-primary" />
+          Get directions · Google Maps
+        </a>
       </CardContent>
     </Card>
   );
@@ -572,9 +570,6 @@ export default async function SpaDetailPage({
             {spa.hours_text ? <SectionCard title="Hours" body={spa.hours_text} /> : null}
             <SectionCard title="What to know" body={spa.what_to_know} />
             <SectionCard title="Important notes" body={spa.important_notes} />
-            {mapCoords && fullAddress ? (
-              <SpaMapCard coords={mapCoords} address={fullAddress} />
-            ) : null}
             {(spa.google_review_url || spa.yelp_review_url) ? (
               <Card>
                 <CardHeader>
@@ -707,6 +702,10 @@ export default async function SpaDetailPage({
           </Card>
 
           <SpaGalleryLightbox images={lightboxImages} />
+
+          {mapCoords && fullAddress ? (
+            <SpaMapCard coords={mapCoords} address={fullAddress} />
+          ) : null}
         </aside>
       </div>
 
