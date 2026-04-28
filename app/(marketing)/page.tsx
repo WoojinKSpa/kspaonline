@@ -11,6 +11,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getFirstGalleryImageUrls } from "@/lib/spa-images";
 import { listPublishedBlogPostsByType } from "@/lib/blog-posts";
 import type { BlogPost } from "@/lib/blog-posts";
+import { getActiveHomepageFeatured, getActiveBannerCampaign } from "@/lib/ad-campaigns";
+import { BannerAd } from "@/components/ads/banner-ad";
+import { ImpressionTracker } from "@/components/ads/impression-tracker";
 
 // ── Hero background media ─────────────────────────────────────────────────────
 // HERO_VIDEO takes priority over HERO_IMAGE when both are set.
@@ -148,10 +151,12 @@ function SectionIntro({
 export default async function HomePage() {
   noStore();
 
-  const [featuredSpas, directoryStats, recentPosts] = await Promise.all([
+  const [featuredSpas, directoryStats, recentPosts, homepageFeaturedCampaigns, bannerCampaign] = await Promise.all([
     getFeaturedSpas(),
     getDirectoryStats(),
     listPublishedBlogPostsByType("guide", 3),
+    getActiveHomepageFeatured(),
+    getActiveBannerCampaign(),
   ]);
   const { countries, listingCount, states } = directoryStats;
 
@@ -302,6 +307,9 @@ export default async function HomePage() {
       </section>
 
       {/* ── Featured Spas ─────────────────────────────────────────────────── */}
+      {homepageFeaturedCampaigns.length > 0 && (
+        <ImpressionTracker campaignIds={homepageFeaturedCampaigns.map((c) => c.id)} />
+      )}
       <section className="py-20">
         <Container>
           <SectionIntro
@@ -373,6 +381,13 @@ export default async function HomePage() {
           )}
         </Container>
       </section>
+
+      {/* ── Banner Ad ─────────────────────────────────────────────────────── */}
+      {bannerCampaign && (
+        <Container className="py-4">
+          <BannerAd campaign={bannerCampaign} />
+        </Container>
+      )}
 
       {/* ── From the Guides ───────────────────────────────────────────────── */}
       {recentPosts.length > 0 && (

@@ -16,6 +16,9 @@ import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
 } from "@/lib/supabase/server";
+import { getActiveSponsoredSpas } from "@/lib/ad-campaigns";
+import { SponsoredCard } from "@/components/ads/sponsored-card";
+import { ImpressionTracker } from "@/components/ads/impression-tracker";
 
 type SpasPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -288,10 +291,12 @@ export default async function SpasPage({ searchParams }: SpasPageProps) {
   };
 
   const hasFilters = Object.values(filters).some(Boolean);
-  const [spas, filterOptions] = await Promise.all([
+  const [spas, filterOptions, sponsoredCampaigns] = await Promise.all([
     getPublishedSpas(filters),
     getFilterOptions(),
+    getActiveSponsoredSpas(),
   ]);
+  const sponsoredSlice = sponsoredCampaigns.slice(0, 3);
 
   return (
     <Container className="py-16">
@@ -372,6 +377,28 @@ export default async function SpasPage({ searchParams }: SpasPageProps) {
           </div>
         </div>
       </form>
+
+      {/* Sponsored placements — up to 3, shown above organic results */}
+      {sponsoredSlice.length > 0 && (
+        <>
+          <ImpressionTracker campaignIds={sponsoredSlice.map((c) => c.id)} />
+          <div className="mt-10">
+            <p className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Sponsored
+            </p>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {sponsoredSlice.map((campaign) => (
+                <SponsoredCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+          </div>
+          <div className="mt-10 border-t border-border pt-8">
+            <p className="mb-4 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              All listings
+            </p>
+          </div>
+        </>
+      )}
 
       {spas.length === 0 ? (
         <div className="mt-10 surface p-10 text-center">

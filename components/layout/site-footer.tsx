@@ -11,6 +11,7 @@ export function SiteFooter() {
           <Link href="/spas">Search</Link>
           <Link href="/blog">Blog</Link>
           <Link href="/guides">Guides</Link>
+          <Link href="/advertise">Advertise</Link>
         </div>
       </Container>
     </footer>
