@@ -12,9 +12,11 @@ import { getFirstGalleryImageUrls } from "@/lib/spa-images";
 import { listPublishedBlogPostsByType } from "@/lib/blog-posts";
 import type { BlogPost } from "@/lib/blog-posts";
 
-// ── Hero background image ─────────────────────────────────────────────────────
-// Upload your spa photo to Supabase Storage (or any HTTPS host) and paste the
-// public URL here. Leave empty to fall back to a solid gradient background.
+// ── Hero background media ─────────────────────────────────────────────────────
+// HERO_VIDEO takes priority over HERO_IMAGE when both are set.
+// Upload to Supabase Storage → Website bucket and paste the public URL below.
+// Leave a value empty ("") to skip it.
+const HERO_VIDEO = "https://mqkjumltnmkpmkkqdmcn.supabase.co/storage/v1/object/public/Website/kspa.mp4";
 const HERO_IMAGE = "https://mqkjumltnmkpmkkqdmcn.supabase.co/storage/v1/object/public/Website/website_background.jpg";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -164,8 +166,29 @@ export default async function HomePage() {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative flex min-h-[620px] items-center overflow-hidden lg:min-h-[740px]">
-        {/* Background */}
-        {HERO_IMAGE ? (
+        {/* Background — video takes priority, then image, then gradient */}
+        {HERO_VIDEO ? (
+          <>
+            <video
+              src={HERO_VIDEO}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+            {/* Static image shown while video loads / on reduced-motion */}
+            {HERO_IMAGE && (
+              <Image
+                src={HERO_IMAGE}
+                alt="Korean spa interior"
+                fill
+                priority
+                className="object-cover object-center -z-10"
+              />
+            )}
+          </>
+        ) : HERO_IMAGE ? (
           <Image
             src={HERO_IMAGE}
             alt="Korean spa interior"
@@ -174,7 +197,6 @@ export default async function HomePage() {
             className="object-cover object-center"
           />
         ) : (
-          /* Fallback gradient when no image is set */
           <div className="absolute inset-0 bg-[linear-gradient(135deg,hsl(173,55%,14%)_0%,hsl(173,40%,22%)_45%,hsl(26,40%,22%)_100%)]" />
         )}
 
