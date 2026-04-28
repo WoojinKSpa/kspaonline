@@ -122,28 +122,6 @@ async function getDirectoryStats() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const STATE_NAMES: Record<string, string> = {
-  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
-  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
-  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
-  IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas",
-  KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
-  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
-  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada",
-  NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
-  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
-  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
-  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
-  VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia",
-  WI: "Wisconsin", WY: "Wyoming", DC: "Washington D.C.",
-  AB: "Alberta", BC: "British Columbia", MB: "Manitoba", NB: "New Brunswick",
-  NL: "Newfoundland", NS: "Nova Scotia", ON: "Ontario", PE: "Prince Edward Island",
-  QC: "Quebec", SK: "Saskatchewan",
-};
-
-function stateLabel(state: string): string {
-  return STATE_NAMES[state.toUpperCase()] ?? state;
-}
 
 function SectionIntro({
   eyebrow,
@@ -433,46 +411,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Browse by Region + Owners ─────────────────────────────────────── */}
-      <section className="pb-20 pt-20">
-        <Container className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
-            <SectionIntro
-              eyebrow="Browse by Region"
-              title="Start with the places already in the directory"
-              description="Explore listings by state, province, or region."
-            />
-            {states.length === 0 ? (
-              <p className="mt-8 text-sm text-muted-foreground">
-                Region listings will appear here as more published spas are added.
-              </p>
-            ) : (
-              <div className="mt-8 flex flex-wrap gap-3">
-                {states.map((state) => (
-                  <Link
-                    key={state}
-                    href={{ pathname: "/spas", query: { state } }}
-                    className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary/30 hover:bg-secondary"
-                  >
-                    {stateLabel(state)}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="surface p-8 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.35)]">
-            <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Owners</p>
-            <h3 className="mt-3 text-3xl font-semibold">Own or manage a Korean spa?</h3>
-            <p className="mt-4 text-base leading-7 text-muted-foreground">
-              Claim your listing, keep your details current, and help new guests discover your spa.
-            </p>
-            <Button asChild size="lg" className="mt-6">
-              <Link href={"/claim" as Route}>Claim your listing</Link>
-            </Button>
-          </div>
-        </Container>
-      </section>
     </div>
   );
 }
