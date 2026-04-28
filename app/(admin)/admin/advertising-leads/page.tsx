@@ -41,7 +41,7 @@ export default async function AdvertisingLeadsPage() {
                   <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                     No leads yet. Once businesses submit the{" "}
                     <a href="/advertise" className="text-primary hover:underline">/advertise</a>{" "}
-                    form, they'll appear here.
+                    form, they&apos;ll appear here.
                   </td>
                 </tr>
               )}
