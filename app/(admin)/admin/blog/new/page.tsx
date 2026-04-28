@@ -4,6 +4,7 @@ import {
   createBlogPostAsDraftAction,
   createBlogPostAsPublishedAction,
 } from "@/app/(admin)/admin/blog/actions";
+import { FeaturedImageUploader } from "@/components/admin/featured-image-uploader";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Button } from "@/components/ui/button";
@@ -59,14 +60,8 @@ export default async function NewBlogPostPage({ searchParams }: Props) {
           </div>
 
           <div className="flex flex-col gap-2 md:col-span-2">
-            <Label htmlFor="featured_image_url">Featured image URL</Label>
-            <Input
-              id="featured_image_url"
-              name="featured_image_url"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-            />
-            <p className="text-xs text-muted-foreground">Paste any image URL — shown as a hero on the post and as a thumbnail in listings.</p>
+            <Label>Featured image</Label>
+            <FeaturedImageUploader name="featured_image_url" />
           </div>
 
           <div className="flex flex-col gap-2 md:col-span-2">

@@ -12,6 +12,32 @@ import {
   type BlogPostStatus,
   type BlogPostType,
 } from "@/lib/blog-posts";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+
+// ── Featured image upload ─────────────────────────────────────────
+
+export async function uploadFeaturedImageAction(
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) return { error: "No file provided." };
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const filename = `featured/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.storage
+    .from("Website")
+    .upload(filename, buffer, { contentType: file.type, upsert: false });
+
+  if (error) return { error: error.message };
+
+  const { data } = supabase.storage.from("Website").getPublicUrl(filename);
+  return { url: data.publicUrl };
+}
 
 // ── Shared helpers ────────────────────────────────────────────────
 
