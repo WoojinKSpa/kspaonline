@@ -68,16 +68,6 @@ export default async function GuidePostPage({ params }: Props) {
             {post.excerpt && (
               <p className="mt-5 text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
             )}
-            {post.published_at && (
-              <p className="mt-4 text-sm text-muted-foreground">
-                Published{" "}
-                {new Date(post.published_at).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            )}
             <div className="mt-6 border-t border-border" />
           </header>
 

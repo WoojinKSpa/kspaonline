@@ -69,15 +69,6 @@ export default async function GuidesPage() {
                       {post.excerpt}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    {post.published_at
-                      ? new Date(post.published_at).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : null}
-                  </p>
                 </div>
               </Link>
             ))}
