@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Globe,
   Mail,
+  Navigation,
   Phone,
   Share2,
   Star,
@@ -199,6 +200,89 @@ function joinParts(parts: Array<string | null | undefined>) {
   return parts.filter(Boolean).join(", ");
 }
 
+// ── Geocoding (Nominatim / OpenStreetMap — free, no API key) ─────────────────
+
+async function geocodeAddress(
+  address: string
+): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+      {
+        headers: { "User-Agent": "KSpaOnline/1.0 (hello@kspa.online)" },
+        next: { revalidate: 60 * 60 * 24 }, // cache 24 h
+      }
+    );
+    const results = (await res.json()) as Array<{ lat: string; lon: string }>;
+    if (!results.length) return null;
+    return { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
+  } catch {
+    return null;
+  }
+}
+
+// ── Map card ─────────────────────────────────────────────────────────────────
+
+function SpaMapCard({
+  coords,
+  address,
+}: {
+  coords: { lat: number; lon: number };
+  address: string;
+}) {
+  const delta = 0.008;
+  const bbox = [
+    coords.lon - delta,
+    coords.lat - delta,
+    coords.lon + delta,
+    coords.lat + delta,
+  ].join(",");
+  const osmEmbed = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coords.lat},${coords.lon}`;
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  const appleMapsUrl = `https://maps.apple.com/?daddr=${encodeURIComponent(address)}`;
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader>
+        <CardTitle>Location</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {/* Map embed */}
+        <div className="overflow-hidden rounded-2xl border border-border">
+          <iframe
+            title="Spa location map"
+            src={osmEmbed}
+            className="h-64 w-full border-0 lg:h-80"
+            loading="lazy"
+          />
+        </div>
+
+        {/* Directions buttons */}
+        <div className="flex flex-wrap gap-3">
+          <a
+            href={appleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
+          >
+            <Navigation className="size-4 text-primary" />
+            Apple Maps
+          </a>
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-secondary"
+          >
+            <Navigation className="size-4 text-primary" />
+            Google Maps
+          </a>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SectionCard({
   title,
   body,
@@ -323,10 +407,11 @@ export default async function SpaDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const [reviewSummary, reviews, userReview] = await Promise.all([
+  const [reviewSummary, reviews, userReview, mapCoords] = await Promise.all([
     getApprovedReviewSummary(spa.id),
     listApprovedReviewsBySpaId(spa.id),
     user ? getUserReviewForSpa(spa.id, user.id) : Promise.resolve(null),
+    fullAddress ? geocodeAddress(fullAddress) : Promise.resolve(null),
   ]);
 
   return (
@@ -487,6 +572,9 @@ export default async function SpaDetailPage({
             {spa.hours_text ? <SectionCard title="Hours" body={spa.hours_text} /> : null}
             <SectionCard title="What to know" body={spa.what_to_know} />
             <SectionCard title="Important notes" body={spa.important_notes} />
+            {mapCoords && fullAddress ? (
+              <SpaMapCard coords={mapCoords} address={fullAddress} />
+            ) : null}
             {(spa.google_review_url || spa.yelp_review_url) ? (
               <Card>
                 <CardHeader>
