@@ -74,7 +74,7 @@ export default async function AdvertisePage({ searchParams }: Props) {
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-foreground/75">
             Reach people actively searching for Korean spas, jjimjilbangs,
-            saunas, and wellness experiences — right when they're ready to book.
+            saunas, and wellness experiences — right when they&apos;re ready to book.
           </p>
         </Container>
       </section>
@@ -131,7 +131,7 @@ export default async function AdvertisePage({ searchParams }: Props) {
             </p>
             <h2 className="mt-3 text-3xl font-semibold">Request more information</h2>
             <p className="mt-4 text-muted-foreground">
-              Fill out the form below and we'll follow up within one business day.
+              Fill out the form below and we&apos;ll follow up within one business day.
             </p>
           </div>
 
@@ -139,7 +139,7 @@ export default async function AdvertisePage({ searchParams }: Props) {
             <div className="mt-10 rounded-2xl border border-green-200 bg-green-50 px-6 py-10 text-center">
               <p className="text-2xl font-semibold text-green-800">Thanks!</p>
               <p className="mt-2 text-green-700">
-                We've received your inquiry and will be in touch soon.
+                We&apos;ve received your inquiry and will be in touch soon.
               </p>
             </div>
           ) : (
@@ -178,7 +178,7 @@ export default async function AdvertisePage({ searchParams }: Props) {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="interest">I'm interested in</Label>
+                <Label htmlFor="interest">I&apos;m interested in</Label>
                 <select
                   id="interest"
                   name="interest"

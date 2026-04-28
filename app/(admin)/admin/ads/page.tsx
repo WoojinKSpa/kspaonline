@@ -2,10 +2,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 
-import { Container } from "@/components/layout/container";
 import { PageIntro } from "@/components/layout/page-intro";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { listAllCampaigns, getAllCampaignMetricTotals } from "@/lib/ad-campaigns";
 
 export const metadata = { title: "Ad Campaigns | Admin" };
