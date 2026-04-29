@@ -26,7 +26,7 @@ export async function importSpasAction(formData: FormData) {
     redirect(`/admin/imports/${result.runId}` as Route);
   }
 
-  redirect(
-    `/admin/imports/upload?error=Import+failed+or+file+was+empty` as Route
-  );
+  // Run tracking table may not exist yet — redirect to history with summary in query params
+  const msg = `Imported+without+run+log+—+${result.inserted}+inserted,+${result.skipped}+skipped,+${result.errors}+errors`;
+  redirect(`/admin/imports?notice=${msg}` as Route);
 }

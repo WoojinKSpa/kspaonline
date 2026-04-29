@@ -9,8 +9,14 @@ export const metadata = {
   title: "Import History | Admin",
 };
 
-export default async function AdminImportsPage() {
+type Props = {
+  searchParams?: Promise<{ notice?: string }>;
+};
+
+export default async function AdminImportsPage({ searchParams }: Props) {
   const runs = await listImportRuns();
+  const params = await searchParams;
+  const notice = params?.notice ? decodeURIComponent(params.notice) : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -26,6 +32,12 @@ export default async function AdminImportsPage() {
           </Link>
         </Button>
       </div>
+
+      {notice && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          {notice}
+        </div>
+      )}
 
       {runs.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border px-6 py-12">
