@@ -227,7 +227,7 @@ export default async function HomePage() {
             {/* Subtext */}
             <p className="mt-6 max-w-md text-lg leading-8 text-white/75">
               Explore Korean spas, saunas, jjimjilbangs, and wellness spaces
-              across the U.S.
+              across the U.S. and the world.
             </p>
 
             {/* Search bar */}
@@ -238,7 +238,7 @@ export default async function HomePage() {
                   <input
                     type="text"
                     name="q"
-                    placeholder="Search by spa name, city, or state"
+                    placeholder="Search by name, city, state, or country"
                     className="w-full bg-transparent py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                   />
                 </div>
