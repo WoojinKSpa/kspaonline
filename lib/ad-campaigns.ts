@@ -287,6 +287,15 @@ export async function submitAdvertisingLead(input: LeadInput): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function updateLeadStatus(id: string, status: string): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("advertising_leads")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function listAdvertisingLeads(): Promise<AdvertisingLead[]> {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase

@@ -10,12 +10,28 @@ import { createCampaignAction } from "../actions";
 
 export const metadata = { title: "New Campaign | Admin" };
 
-type Props = { searchParams?: Promise<{ error?: string }> };
+type Props = {
+  searchParams?: Promise<{
+    error?: string;
+    advertiser_name?: string;
+    advertiser_email?: string;
+    ad_type?: string;
+    title?: string;
+  }>;
+};
 
 export default async function NewCampaignPage({ searchParams }: Props) {
   const params = await searchParams;
   const error = params?.error ? decodeURIComponent(params.error) : null;
   const spas = await listSpasForSelect();
+
+  // Pre-fill values when converting from a lead
+  const prefill = {
+    title:            params?.title            ?? "",
+    advertiser_name:  params?.advertiser_name  ?? "",
+    advertiser_email: params?.advertiser_email ?? "",
+    ad_type:          params?.ad_type          ?? "featured_listing",
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -31,22 +47,22 @@ export default async function NewCampaignPage({ searchParams }: Props) {
         <div className="grid gap-6 rounded-2xl border border-border bg-card p-6 md:grid-cols-2">
           <div className="flex flex-col gap-2 md:col-span-2">
             <Label htmlFor="title">Campaign title *</Label>
-            <Input id="title" name="title" placeholder="e.g. Aqua Day Spa — Spring Promo" required autoFocus />
+            <Input id="title" name="title" defaultValue={prefill.title} placeholder="e.g. Aqua Day Spa — Spring Promo" required autoFocus />
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="advertiser_name">Advertiser name</Label>
-            <Input id="advertiser_name" name="advertiser_name" placeholder="Business name" />
+            <Input id="advertiser_name" name="advertiser_name" defaultValue={prefill.advertiser_name} placeholder="Business name" />
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="advertiser_email">Advertiser email</Label>
-            <Input id="advertiser_email" name="advertiser_email" type="email" placeholder="contact@spa.com" />
+            <Input id="advertiser_email" name="advertiser_email" type="email" defaultValue={prefill.advertiser_email} placeholder="contact@spa.com" />
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="ad_type">Ad type *</Label>
-            <select id="ad_type" name="ad_type" defaultValue="featured_listing"
+            <select id="ad_type" name="ad_type" defaultValue={prefill.ad_type}
               className="flex h-11 w-full rounded-2xl border border-input bg-background px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <option value="featured_listing">Featured Listing</option>
               <option value="homepage_featured">Homepage Featured</option>
