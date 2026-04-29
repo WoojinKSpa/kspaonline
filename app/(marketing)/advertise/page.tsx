@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BarChart2, MapPin, Star, TrendingUp, Zap } from "lucide-react";
+import { BarChart2, Clock, Lock, MapPin, Star, TrendingUp, Zap } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,49 @@ export default async function AdvertisePage({ searchParams }: Props) {
         </Container>
       </section>
 
+      {/* Founding Advertiser waitlist */}
+      <section className="border-b border-border bg-accent/40 py-14">
+        <Container className="max-w-3xl">
+          <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+                <Clock className="size-3" />
+                Now accepting founding advertisers
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold sm:text-3xl">
+                Lock in our lowest rate — ever.
+              </h2>
+              <p className="mt-3 max-w-lg text-base leading-7 text-muted-foreground">
+                We&apos;re in early launch and offering founding advertiser pricing to
+                the first businesses that get on board. Rates will increase as
+                the directory grows. Join the waitlist and we&apos;ll reach out before
+                spots fill.
+              </p>
+              <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Lock className="size-4 shrink-0 text-primary" />
+                  Founding rate locked in for the life of your campaign
+                </li>
+                <li className="flex items-center gap-2">
+                  <Star className="size-4 shrink-0 text-primary" />
+                  First pick of premium placements before public launch
+                </li>
+                <li className="flex items-center gap-2">
+                  <TrendingUp className="size-4 shrink-0 text-primary" />
+                  No commitment — just let us know you&apos;re interested
+                </li>
+              </ul>
+            </div>
+            <a
+              href="#contact"
+              className="shrink-0 rounded-2xl bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-md transition hover:bg-primary/90"
+            >
+              Join the waitlist →
+            </a>
+          </div>
+        </Container>
+      </section>
+
       {/* Packages */}
       <section className="py-20">
         <Container>
@@ -127,19 +170,19 @@ export default async function AdvertisePage({ searchParams }: Props) {
         <Container className="max-w-2xl">
           <div className="text-center">
             <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">
-              Get started
+              Reserve your spot
             </p>
-            <h2 className="mt-3 text-3xl font-semibold">Request more information</h2>
+            <h2 className="mt-3 text-3xl font-semibold">Join the founding advertiser waitlist</h2>
             <p className="mt-4 text-muted-foreground">
-              Fill out the form below and we&apos;ll follow up within one business day.
+              Drop us your details and we&apos;ll reach out personally before spots open to the public. No commitment required.
             </p>
           </div>
 
           {success ? (
             <div className="mt-10 rounded-2xl border border-green-200 bg-green-50 px-6 py-10 text-center">
-              <p className="text-2xl font-semibold text-green-800">Thanks!</p>
+              <p className="text-2xl font-semibold text-green-800">You&apos;re on the list!</p>
               <p className="mt-2 text-green-700">
-                We&apos;ve received your inquiry and will be in touch soon.
+                We&apos;ll reach out personally before spots open to the public. Thanks for your interest.
               </p>
             </div>
           ) : (
@@ -204,7 +247,7 @@ export default async function AdvertisePage({ searchParams }: Props) {
               </div>
 
               <Button type="submit" size="lg" className="self-start">
-                Send inquiry
+                Join the waitlist
               </Button>
             </form>
           )}
