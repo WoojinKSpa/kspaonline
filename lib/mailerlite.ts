@@ -100,6 +100,82 @@ export async function sendAdLeadNotification(lead: LeadEmailData): Promise<void>
   });
 }
 
+// ── Contact form emails ───────────────────────────────────────────────────────
+
+type ContactEmailData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
+export async function sendContactNotification(contact: ContactEmailData): Promise<void> {
+  await sendEmail({
+    from: { email: FROM_EMAIL, name: FROM_NAME },
+    to: [{ email: ADMIN_EMAIL, name: "KSpa Admin" }],
+    subject: `Contact form: ${contact.subject}`,
+    text: [
+      `New contact form submission on KSpa Online.`,
+      ``,
+      `Name:    ${contact.name}`,
+      `Email:   ${contact.email}`,
+      `Subject: ${contact.subject}`,
+      ``,
+      `Message:`,
+      contact.message,
+      ``,
+      `Reply directly to ${contact.email} to respond.`,
+    ].join("\n"),
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <h2 style="margin-bottom:4px">New contact message</h2>
+        <p style="color:#666;margin-top:0">Received via <a href="https://kspa.online/contact">kspa.online/contact</a></p>
+        <table style="width:100%;border-collapse:collapse;margin-top:20px">
+          <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#666;width:80px">Name</td><td style="padding:8px 0;border-bottom:1px solid #eee"><strong>${contact.name}</strong></td></tr>
+          <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee"><a href="mailto:${contact.email}">${contact.email}</a></td></tr>
+          <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#666">Subject</td><td style="padding:8px 0;border-bottom:1px solid #eee">${contact.subject}</td></tr>
+          <tr><td style="padding:8px 0;color:#666;vertical-align:top">Message</td><td style="padding:8px 0;white-space:pre-wrap">${contact.message}</td></tr>
+        </table>
+        <div style="margin-top:28px">
+          <a href="mailto:${contact.email}" style="background:#0e6c5d;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Reply to ${contact.name}</a>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendContactConfirmation(contact: ContactEmailData): Promise<void> {
+  await sendEmail({
+    from: { email: FROM_EMAIL, name: FROM_NAME },
+    to: [{ email: contact.email, name: contact.name }],
+    subject: "We got your message — KSpa Online",
+    text: [
+      `Hi ${contact.name},`,
+      ``,
+      `Thanks for reaching out! We received your message and will get back to you as soon as possible.`,
+      ``,
+      `You wrote:`,
+      `"${contact.message}"`,
+      ``,
+      `— The KSpa Online team`,
+    ].join("\n"),
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+        <h2 style="color:#0e6c5d">We got your message!</h2>
+        <p>Hi ${contact.name},</p>
+        <p>Thanks for reaching out. We&apos;ll get back to you as soon as possible.</p>
+        <blockquote style="border-left:3px solid #0e6c5d;margin:20px 0;padding:12px 16px;background:#f6faf9;color:#444;border-radius:0 8px 8px 0">
+          ${contact.message}
+        </blockquote>
+        <div style="margin-top:28px">
+          <a href="https://kspa.online/spas" style="background:#0e6c5d;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Browse Spa Directory</a>
+        </div>
+        <p style="margin-top:32px;color:#999;font-size:12px">— The KSpa Online team · <a href="https://kspa.online" style="color:#999">kspa.online</a></p>
+      </div>
+    `,
+  });
+}
+
 export async function sendAdLeadConfirmation(lead: LeadEmailData): Promise<void> {
   await sendEmail({
     from: { email: FROM_EMAIL, name: FROM_NAME },

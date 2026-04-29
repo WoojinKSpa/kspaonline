@@ -12,6 +12,7 @@ export function SiteFooter() {
           <Link href="/blog">Blog</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/advertise">Advertise</Link>
+          <Link href="/contact">Contact</Link>
           <Link href="/privacy">Privacy Policy</Link>
         </div>
       </Container>
