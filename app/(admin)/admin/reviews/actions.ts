@@ -34,6 +34,6 @@ export async function moderateReviewAction(formData: FormData) {
   }
 
   revalidatePath("/admin/reviews");
-  revalidatePath("/spas");
+  revalidatePath("/spas", "layout"); // clears all /spas and /spas/[slug] pages
   redirect(`/admin/reviews?status=${status}&success=Review+updated` as Route);
 }
