@@ -13,6 +13,7 @@ import { listPublishedBlogPostsByType } from "@/lib/blog-posts";
 import type { BlogPost } from "@/lib/blog-posts";
 import { getActiveHomepageFeatured, getActiveBannerCampaign } from "@/lib/ad-campaigns";
 import { BannerAd } from "@/components/ads/banner-ad";
+import { HomepageFeaturedAds } from "@/components/ads/homepage-featured-ad";
 import { ImpressionTracker } from "@/components/ads/impression-tracker";
 
 // ── Hero background media ─────────────────────────────────────────────────────
@@ -306,10 +307,15 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* ── Featured Spas ─────────────────────────────────────────────────── */}
+      {/* ── Homepage Featured Ad campaigns ────────────────────────────────── */}
       {homepageFeaturedCampaigns.length > 0 && (
-        <ImpressionTracker campaignIds={homepageFeaturedCampaigns.map((c) => c.id)} />
+        <>
+          <ImpressionTracker campaignIds={homepageFeaturedCampaigns.map((c) => c.id)} />
+          <HomepageFeaturedAds campaigns={homepageFeaturedCampaigns} />
+        </>
       )}
+
+      {/* ── Featured Spas ─────────────────────────────────────────────────── */}
       <section className="py-20">
         <Container>
           <SectionIntro
