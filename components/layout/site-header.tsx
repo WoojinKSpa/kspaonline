@@ -1,4 +1,5 @@
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
@@ -34,16 +35,15 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/60 bg-background/80 backdrop-blur-xl">
       <Container className="flex h-20 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            K
-          </div>
-          <div>
-            <p className="text-base font-semibold">{siteConfig.name}</p>
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Korean spa directory
-            </p>
-          </div>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="https://mqkjumltnmkpmkkqdmcn.supabase.co/storage/v1/object/public/Website/logo_site.png"
+            alt="KSpa Online"
+            width={180}
+            height={48}
+            className="h-10 w-auto object-contain"
+            priority
+          />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
