@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { PageIntro } from "@/components/layout/page-intro";
+import { Button } from "@/components/ui/button";
 import { listImportRuns } from "@/lib/import-runs";
 
 export const metadata = {
@@ -13,11 +14,18 @@ export default async function AdminImportsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageIntro
-        eyebrow="Admin"
-        title="Import history"
-        description="A log of every data import run. Records are created automatically when the import API is used."
-      />
+      <div className="flex items-start justify-between gap-4">
+        <PageIntro
+          eyebrow="Admin"
+          title="Import history"
+          description="A log of every data import run."
+        />
+        <Button asChild>
+          <Link href={"/admin/imports/upload" as Route}>
+            Upload CSV
+          </Link>
+        </Button>
+      </div>
 
       {runs.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border px-6 py-12">
