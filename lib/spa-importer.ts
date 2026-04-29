@@ -200,7 +200,7 @@ export async function importSpasFromCSV(
     .filter((row) => !isNotesRow(row));
 
   let inserted = 0;
-  let updated = 0;
+  const updated = 0;
   let skipped = 0;
   let errors = 0;
 
