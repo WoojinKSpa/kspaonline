@@ -7,6 +7,73 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "50mb",
     },
   },
+  async redirects() {
+    return [
+      // ── WordPress directory pages ──────────────────────────────────────
+      {
+        source: "/business-directory",
+        destination: "/spas",
+        permanent: true,
+      },
+      // Individual listing pages (/Listings or /Listings/some-spa-slug)
+      {
+        source: "/Listings",
+        destination: "/spas",
+        permanent: true,
+      },
+      {
+        source: "/Listings/:slug*",
+        destination: "/spas",
+        permanent: true,
+      },
+
+      // ── WordPress blog / guide posts at root level ─────────────────────
+      // Redirect to matching new slug under /guides or /blog.
+      // If the post doesn't exist in the new CMS it will 404 there gracefully.
+      {
+        source: "/korean-spa-wet-area-shower",
+        destination: "/guides/korean-spa-wet-area-shower",
+        permanent: true,
+      },
+      {
+        source: "/gender-are-korean-spas-separated",
+        destination: "/guides/gender-are-korean-spas-separated",
+        permanent: true,
+      },
+      {
+        source: "/how-kspas-improved-my-body-confidence",
+        destination: "/blog/how-kspas-improved-my-body-confidence",
+        permanent: true,
+      },
+      {
+        source: "/video-tour-and-instructions-for-korean-spa",
+        destination: "/guides/video-tour-and-instructions-for-korean-spa",
+        permanent: true,
+      },
+      {
+        source: "/what-do-korean-spas-use-to-exfoliate",
+        destination: "/guides/what-do-korean-spas-use-to-exfoliate",
+        permanent: true,
+      },
+
+      // ── WordPress system / admin URLs ──────────────────────────────────
+      {
+        source: "/wp-admin/:path*",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/wp-login.php",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/wp-content/:path*",
+        destination: "/",
+        permanent: false,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
