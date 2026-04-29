@@ -216,7 +216,7 @@ export default async function HomePage() {
           <div className="max-w-xl">
             {/* Badge */}
             <Badge className="mb-6 border border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/15">
-              Korean spa directory
+              Korean Spa Directory
             </Badge>
 
             {/* Heading */}
