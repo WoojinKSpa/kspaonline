@@ -51,6 +51,8 @@ export async function submitSpaAction(formData: FormData) {
     slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
   }
 
+  const submittedByEmail = emptyToNull(formData.get("submitted_by_email"));
+
   const { error } = await supabase.from("spas").insert({
     name,
     slug,
@@ -61,7 +63,8 @@ export async function submitSpaAction(formData: FormData) {
     phone: emptyToNull(formData.get("phone")),
     address_line_1: emptyToNull(formData.get("address_line_1")),
     summary: emptyToNull(formData.get("summary")),
-    submitted_by_email: emptyToNull(formData.get("submitted_by_email")),
+    // Store submitter email in notes so admins can follow up
+    important_notes: submittedByEmail ? `Submitted by: ${submittedByEmail}` : null,
   });
 
   if (error) {
