@@ -248,14 +248,8 @@ export async function importSpasFromCSV(
         .maybeSingle();
 
       if (existing) {
-        // Update existing spa
-        const { error } = await supabase
-          .from("spas")
-          .update({ ...payload, updated_at: new Date().toISOString() })
-          .eq("id", existing.id);
-
-        if (error) throw new Error(error.message);
-        updated++;
+        // Spa already exists — skip it
+        skipped++;
       } else {
         // Resolve slug uniqueness and insert
         const slug = await resolveSlug(payload.slug);

@@ -68,7 +68,7 @@ export default async function ImportUploadPage({ searchParams }: Props) {
               <li>The notes/guidance row from the template is automatically skipped.</li>
               <li><strong>name</strong> and <strong>city</strong> are required on every row.</li>
               <li>If <strong>slug</strong> is blank, one is generated from the spa name.</li>
-              <li>If a spa with that slug already exists it will be <strong>updated</strong>, not duplicated.</li>
+              <li>If a spa with that slug already exists it will be <strong>skipped</strong>, not duplicated.</li>
               <li>Amenities and listing_categories use <strong>pipe separation</strong>: <code className="rounded bg-secondary px-1">Dry Sauna|Hot Tub</code></li>
               <li>Status defaults to <strong>draft</strong> if left blank.</li>
             </ul>
