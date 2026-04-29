@@ -6,7 +6,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { ShareButtons } from "@/components/share-buttons";
 import { getPublishedBlogPostBySlug } from "@/lib/blog-posts";
+
+const BASE_URL = "https://kspa.online";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -34,6 +37,8 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPublishedBlogPostBySlug(slug);
   if (!post || post.post_type !== "blog") notFound();
+
+  const pageUrl = `${BASE_URL}/blog/${slug}`;
 
   return (
     <div className="pb-20">
@@ -78,7 +83,9 @@ export default async function BlogPostPage({ params }: Props) {
                 })}
               </p>
             )}
-            <div className="mt-6 border-t border-border" />
+            <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-5">
+              <ShareButtons url={pageUrl} title={post.title} />
+            </div>
           </header>
 
           {post.content ? (

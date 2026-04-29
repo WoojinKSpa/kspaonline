@@ -23,6 +23,9 @@ import {
   normalizeAmenitySelection,
 } from "@/lib/amenities";
 import { Container } from "@/components/layout/container";
+import { ShareButtons } from "@/components/share-buttons";
+import { StateLandingPage } from "@/components/spas/state-landing-page";
+import { CityLandingPage } from "@/components/spas/city-landing-page";
 import { SpaGalleryLightbox } from "@/components/spas/spa-gallery-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,15 @@ import {
   listApprovedReviewsBySpaId,
 } from "@/lib/spa-reviews";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  resolveStateFromSlug,
+  getSpasByState,
+  getSpasByCity,
+  getCitiesInState,
+} from "@/lib/location-spas";
+import { US_STATE_BY_SLUG, slugToCity, stateToSlug } from "@/lib/us-locations";
+
+const BASE_URL = "https://kspa.online";
 
 type SpaDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -336,15 +348,30 @@ function StarRating({ rating }: { rating: number }) {
 
 export async function generateMetadata({ params }: SpaDetailPageProps) {
   const { slug } = await params;
-  const spa = await getPublishedSpaBySlug(slug);
 
-  if (!spa) {
-    return { title: "Spa not found" };
+  // State landing page
+  const stateMatch = resolveStateFromSlug(slug);
+  if (stateMatch) {
+    return {
+      title: `Korean Spas in ${stateMatch.name} | KSpa Online`,
+      description: `Browse Korean spa listings in ${stateMatch.name}. Find hours, amenities, day passes, and more.`,
+    };
   }
 
+  // Spa detail
+  const spa = await getPublishedSpaBySlug(slug);
+  if (spa) {
+    return {
+      title: spa.name,
+      description: spa.summary || spa.description || "Published spa listing",
+    };
+  }
+
+  // City landing page
+  const cityName = slugToCity(slug);
   return {
-    title: spa.name,
-    description: spa.summary || spa.description || "Published spa listing",
+    title: `Korean Spas in ${cityName} | KSpa Online`,
+    description: `Browse Korean spa listings in ${cityName}. Find hours, amenities, day passes, and more.`,
   };
 }
 
@@ -356,10 +383,37 @@ export default async function SpaDetailPage({
 
   const { slug } = await params;
   const query = await searchParams;
-  const spa = await getPublishedSpaBySlug(slug);
 
+  // ── 1. State landing page ─────────────────────────────────────────────────
+  const stateMatch = resolveStateFromSlug(slug);
+  if (stateMatch) {
+    const stateInfo = US_STATE_BY_SLUG.get(slug)!;
+    const [spas, cities] = await Promise.all([
+      getSpasByState(stateMatch.name, stateMatch.abbr),
+      getCitiesInState(stateMatch.name, stateMatch.abbr),
+    ]);
+    return <StateLandingPage state={stateInfo} spas={spas} cities={cities} />;
+  }
+
+  // ── 2. Individual spa ─────────────────────────────────────────────────────
+  const spa = await getPublishedSpaBySlug(slug);
   if (!spa) {
-    notFound();
+    // ── 3. City landing page ───────────────────────────────────────────────
+    const cityName = slugToCity(slug);
+    const citySpas = await getSpasByCity(cityName);
+    if (citySpas.length === 0) notFound();
+
+    // Derive state from first result (best guess for the "Back" breadcrumb)
+    const firstState = citySpas[0]?.state ?? null;
+    const inferredState = firstState ? (US_STATE_BY_SLUG.get(stateToSlug(firstState) ?? "") ?? null) : null;
+
+    return (
+      <CityLandingPage
+        cityName={cityName}
+        state={inferredState}
+        spas={citySpas}
+      />
+    );
   }
 
   const location = joinParts([spa.city, spa.state]);
@@ -370,6 +424,7 @@ export default async function SpaDetailPage({
     spa.postal_code,
   ]);
   const browseHref: Route = "/spas";
+  const pageUrl = `${BASE_URL}/spas/${spa.slug}`;
   const website = spa.business_website || spa.website;
   const phone = spa.business_phone || spa.phone;
   const email = spa.business_email || spa.email;
@@ -541,6 +596,11 @@ export default async function SpaDetailPage({
                     ))}
                   </div>
                 ) : null}
+
+                {/* Share buttons */}
+                <div className="mt-5 flex items-center gap-2">
+                  <ShareButtons url={pageUrl} title={spa.name} />
+                </div>
 
                 {/* Claim Listing Button */}
                 <div className="mt-6 border-t pt-6">

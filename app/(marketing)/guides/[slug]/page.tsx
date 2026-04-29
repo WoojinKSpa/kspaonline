@@ -6,7 +6,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
+import { ShareButtons } from "@/components/share-buttons";
 import { getPublishedBlogPostBySlug } from "@/lib/blog-posts";
+
+const BASE_URL = "https://kspa.online";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -34,6 +37,8 @@ export default async function GuidePostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPublishedBlogPostBySlug(slug);
   if (!post) notFound();
+
+  const pageUrl = `${BASE_URL}/guides/${slug}`;
 
   return (
     <div className="pb-20">
@@ -68,7 +73,9 @@ export default async function GuidePostPage({ params }: Props) {
             {post.excerpt && (
               <p className="mt-5 text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
             )}
-            <div className="mt-6 border-t border-border" />
+            <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-5">
+              <ShareButtons url={pageUrl} title={post.title} />
+            </div>
           </header>
 
           {post.content ? (
